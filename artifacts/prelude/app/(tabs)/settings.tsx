@@ -1,0 +1,362 @@
+import { Feather } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getColors, PreludeColors } from '@/constants/colors';
+import { useApp } from '@/context/AppContext';
+
+interface SettingsRowProps {
+  icon: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  destructive?: boolean;
+  chevron?: boolean;
+  colors: ReturnType<typeof getColors>;
+  isDark: boolean;
+}
+
+function SettingsRow({
+  icon,
+  label,
+  value,
+  onPress,
+  destructive,
+  chevron = true,
+  colors,
+  isDark,
+}: SettingsRowProps) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.6 : 1}
+      style={[styles.row, { borderBottomColor: colors.border }]}
+      accessibilityRole={onPress ? 'button' : 'text'}
+      accessibilityLabel={label}
+    >
+      <View style={styles.rowLeft}>
+        <Feather
+          name={icon as any}
+          size={17}
+          color={destructive ? '#AE6B6B' : colors.amber}
+          style={styles.rowIcon}
+        />
+        <Text
+          style={[
+            styles.rowLabel,
+            { color: destructive ? '#AE6B6B' : colors.primary },
+          ]}
+        >
+          {label}
+        </Text>
+      </View>
+      <View style={styles.rowRight}>
+        {value ? (
+          <Text style={[styles.rowValue, { color: colors.secondary }]} numberOfLines={1}>
+            {value}
+          </Text>
+        ) : null}
+        {chevron && onPress ? (
+          <Feather name="chevron-right" size={15} color={colors.tertiary} />
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+export default function SettingsScreen() {
+  const isDark = useColorScheme() === 'dark';
+  const colors = getColors(isDark);
+  const insets = useSafeAreaInsets();
+  const { userName, setUserName } = useApp();
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(userName);
+
+  const webTopPad = Platform.OS === 'web' ? 67 : 0;
+  const webBottomPad = Platform.OS === 'web' ? 34 : 0;
+
+  function showDisclaimer() {
+    Alert.alert(
+      'About Prelude',
+      'Prelude is a personal reflection and preparation tool. It is not therapy, and it is not a substitute for professional mental health care.\n\nIf you are in crisis, please contact the 988 Suicide & Crisis Lifeline by calling or texting 988.',
+      [{ text: 'Understood', style: 'default' }]
+    );
+  }
+
+  function call988() {
+    Alert.alert(
+      '988 Suicide & Crisis Lifeline',
+      'You can call or text 988 to reach the Suicide & Crisis Lifeline. Would you like to call now?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Call 988', onPress: () => Linking.openURL('tel:988') },
+      ]
+    );
+  }
+
+  function saveName() {
+    setUserName(nameInput.trim());
+    setEditingName(false);
+  }
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? PreludeColors.depth.dark : PreludeColors.depth.light },
+      ]}
+    >
+      {/* Header */}
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + webTopPad + 16,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.primary }]}>Settings</Text>
+      </View>
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + webBottomPad + 100,
+        }}
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        {/* Profile section */}
+        <Text style={[styles.sectionLabel, { color: colors.tertiary }]}>PROFILE</Text>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: isDark ? colors.surface : colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          {editingName ? (
+            <View style={[styles.row, { borderBottomColor: colors.border }]}>
+              <TextInput
+                style={[styles.nameInput, { color: colors.primary, borderBottomColor: colors.amber }]}
+                value={nameInput}
+                onChangeText={setNameInput}
+                autoFocus
+                placeholder="Your first name"
+                placeholderTextColor={colors.tertiary}
+                returnKeyType="done"
+                onSubmitEditing={saveName}
+                onBlur={saveName}
+                maxLength={40}
+              />
+            </View>
+          ) : (
+            <SettingsRow
+              icon="user"
+              label="Your Name"
+              value={userName || 'Not set'}
+              onPress={() => {
+                setNameInput(userName);
+                setEditingName(true);
+              }}
+              colors={colors}
+              isDark={isDark}
+            />
+          )}
+        </View>
+
+        {/* AI & Privacy */}
+        <Text style={[styles.sectionLabel, { color: colors.tertiary }]}>
+          AI & PRIVACY
+        </Text>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: isDark ? colors.surface : colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <SettingsRow
+            icon="cpu"
+            label="Apple Intelligence"
+            value="On-Device"
+            onPress={undefined}
+            chevron={false}
+            colors={colors}
+            isDark={isDark}
+          />
+          <SettingsRow
+            icon="lock"
+            label="Data Storage"
+            value="On Device Only"
+            onPress={undefined}
+            chevron={false}
+            colors={colors}
+            isDark={isDark}
+          />
+          <SettingsRow
+            icon="wifi-off"
+            label="Network Access"
+            value="Never During Sessions"
+            onPress={undefined}
+            chevron={false}
+            colors={colors}
+            isDark={isDark}
+          />
+        </View>
+
+        {/* Support */}
+        <Text style={[styles.sectionLabel, { color: colors.tertiary }]}>SUPPORT</Text>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: isDark ? colors.surface : colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <SettingsRow
+            icon="info"
+            label="About Prelude"
+            onPress={showDisclaimer}
+            colors={colors}
+            isDark={isDark}
+          />
+          <SettingsRow
+            icon="phone"
+            label="988 Crisis Lifeline"
+            value="Call or Text"
+            onPress={call988}
+            colors={colors}
+            isDark={isDark}
+          />
+        </View>
+
+        {/* Prelude wordmark */}
+        <View style={styles.wordmark}>
+          <Text style={[styles.wordmarkText, { color: colors.tertiary }]}>
+            Prelude
+          </Text>
+          <Text style={[styles.versionText, { color: colors.tertiary }]}>
+            Version 1.0
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '400',
+    fontFamily: Platform.OS === 'ios' ? 'NewYorkSmall-Regular' : undefined,
+    letterSpacing: 0.2,
+  },
+  scroll: {
+    flex: 1,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 1.2,
+    fontFamily: 'Inter_500Medium',
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 10,
+  },
+  section: {
+    marginHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 15,
+    minHeight: 52,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  rowIcon: {
+    marginRight: 12,
+    width: 20,
+  },
+  rowLabel: {
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+    flex: 1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    maxWidth: 160,
+  },
+  rowValue: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'right',
+  },
+  nameInput: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    marginHorizontal: 18,
+    marginVertical: 10,
+  },
+  wordmark: {
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingBottom: 20,
+    gap: 4,
+  },
+  wordmarkText: {
+    fontSize: 17,
+    fontFamily: Platform.OS === 'ios' ? 'NewYorkSmall-Regular' : undefined,
+    letterSpacing: 1.5,
+  },
+  versionText: {
+    fontSize: 11,
+    fontFamily: 'Inter_400Regular',
+  },
+});

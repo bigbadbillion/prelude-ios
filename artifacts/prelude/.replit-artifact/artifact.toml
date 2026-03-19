@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Prelude"
+version = "1.0.0"
+id = "artifacts/prelude"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 19305
+
+[services.development]
+run = "pnpm --filter @workspace/prelude run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/prelude", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/prelude", "run", "serve" ]
+
+[services.env]
+PORT = "19305"
+BASE_PATH = "/"
