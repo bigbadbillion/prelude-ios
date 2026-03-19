@@ -119,15 +119,93 @@ function readAmplitude(analyser: AnalyserNode): number {
 }
 
 // ─── TTS helpers ──────────────────────────────────────────────────────────────
+
+// iOS: premium voices need to be downloaded in
+// Settings → Accessibility → Spoken Content → Voices → English
+// These are checked in priority order.
 const PREMIUM_VOICES_IOS = [
-  'com.apple.voice.premium.en-US.Zoe',
+  'com.apple.voice.premium.en-US.Zoe',    // Premium — best quality
   'com.apple.voice.premium.en-US.Evan',
-  'com.apple.voice.enhanced.en-US.Zoe',
+  'com.apple.voice.premium.en-US.Nicky',
+  'com.apple.voice.enhanced.en-US.Zoe',   // Enhanced — good quality
   'com.apple.voice.enhanced.en-US.Evan',
+  'com.apple.voice.enhanced.en-US.Nicky',
+  'com.apple.ttsbundle.Samantha-premium',  // Older premium name
+  'com.apple.ttsbundle.Samantha-compact',
 ];
 
+// Web: voice names in priority order (macOS/iOS Safari have the best ones)
+const WEB_VOICE_PRIORITY = [
+  // macOS / iOS system voices (available in Safari, Chrome on Mac)
+  'Samantha',          // macOS — warm, natural
+  'Karen',             // Australian English — clear
+  'Moira',             // Irish English — warm
+  'Tessa',             // South African — pleasant
+  'Veena',
+  // Chrome neural voices (available in Chrome on Mac/Windows)
+  'Google US English',
+  'Google UK English Female',
+  // Windows voices
+  'Microsoft Zira',
+  'Microsoft Aria',
+  'Microsoft Jenny',
+];
+
+/**
+ * Waits for browser voices to load, then returns the best available voice.
+ * Voices load asynchronously — calling getVoices() synchronously usually
+ * returns an empty array on first load.
+ */
+let cachedWebVoice: SpeechSynthesisVoice | null | undefined = undefined;
+
+function getBestWebVoice(): Promise<SpeechSynthesisVoice | null> {
+  return new Promise((resolve) => {
+    if (cachedWebVoice !== undefined) {
+      resolve(cachedWebVoice);
+      return;
+    }
+
+    function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+      // Try priority list first
+      for (const name of WEB_VOICE_PRIORITY) {
+        const match = voices.find((v) => v.name.includes(name));
+        if (match) return match;
+      }
+      // Fall back to any en-US voice that isn't the default (default is usually the worst)
+      const enUS = voices.filter((v) => v.lang.startsWith('en') && !v.default);
+      return enUS[0] ?? voices[0] ?? null;
+    }
+
+    const synth = window.speechSynthesis;
+    const existing = synth.getVoices();
+    if (existing.length > 0) {
+      cachedWebVoice = pickVoice(existing);
+      resolve(cachedWebVoice);
+      return;
+    }
+
+    // Voices not loaded yet — wait for the event (fires once on first load)
+    const onChanged = () => {
+      synth.removeEventListener('voiceschanged', onChanged);
+      const loaded = synth.getVoices();
+      cachedWebVoice = pickVoice(loaded);
+      resolve(cachedWebVoice);
+    };
+    synth.addEventListener('voiceschanged', onChanged);
+
+    // Safety timeout — if event never fires, resolve with null
+    setTimeout(() => {
+      synth.removeEventListener('voiceschanged', onChanged);
+      if (cachedWebVoice === undefined) {
+        cachedWebVoice = null;
+        resolve(null);
+      }
+    }, 3000);
+  });
+}
+
 async function findPremiumVoice(): Promise<string | undefined> {
-  if (Platform.OS !== 'ios') return undefined;
+  if (Platform.OS === 'web') return undefined; // web uses getBestWebVoice() instead
   try {
     const voices = await Speech.getAvailableVoicesAsync();
     for (const preferred of PREMIUM_VOICES_IOS) {
@@ -147,31 +225,24 @@ function speakText(
   let cancelled = false;
 
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.speechSynthesis) {
-    // Use Web Speech API directly for web — more reliable than expo-speech on web
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 0.97;
-    utterance.volume = 0.92;
-    utterance.onend = () => { if (!cancelled) onDone(); };
-    utterance.onerror = () => { if (!cancelled) onDone(); };
 
-    // Pick a warm voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(
-      (v) =>
-        v.name.includes('Samantha') ||
-        v.name.includes('Zoe') ||
-        v.name.includes('Karen') ||
-        v.name.includes('Moira')
-    );
-    if (preferred) utterance.voice = preferred;
-
-    window.speechSynthesis.speak(utterance);
+    // Async: wait for voices to load before speaking
+    getBestWebVoice().then((voice) => {
+      if (cancelled) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.88;   // slightly slower than default — unhurried
+      utterance.pitch = 0.95;  // slightly lower — warmer tone
+      utterance.volume = 0.92;
+      if (voice) utterance.voice = voice;
+      utterance.onend = () => { if (!cancelled) onDone(); };
+      utterance.onerror = () => { if (!cancelled) onDone(); };
+      window.speechSynthesis.speak(utterance);
+    });
   } else {
     Speech.speak(text, {
       voice: voiceId,
-      rate: 0.48,
+      rate: 0.48,    // AVSpeechSynthesizer rate (0=slowest, 1=fastest, default~0.5)
       pitch: 0.95,
       volume: 0.9,
       onDone: () => { if (!cancelled) onDone(); },
