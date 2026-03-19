@@ -12,7 +12,7 @@ function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: 'circle', selected: 'circle.fill' }} />
+        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
         <Label>Home</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
@@ -88,9 +88,9 @@ function ClassicTabLayout() {
           title: 'Home',
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="circle" tintColor={color} size={22} />
+              <SymbolView name="house" tintColor={color} size={22} />
             ) : (
-              <Feather name="circle" size={22} color={color} />
+              <Feather name="home" size={22} color={color} />
             ),
         }}
       />
