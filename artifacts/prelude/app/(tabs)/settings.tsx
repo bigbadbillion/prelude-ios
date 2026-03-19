@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import * as Speech from 'expo-speech';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -16,26 +17,58 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getColors, PreludeColors } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
 
+type VoiceQuality = 'premium' | 'enhanced' | 'standard' | 'checking';
+
+async function detectVoiceQuality(): Promise<VoiceQuality> {
+  if (Platform.OS !== 'ios') return 'standard';
+  try {
+    const voices = await Speech.getAvailableVoicesAsync();
+    if (voices.some((v) => v.identifier.includes('.premium.'))) return 'premium';
+    if (voices.some((v) => v.identifier.includes('.enhanced.'))) return 'enhanced';
+  } catch {
+    /* ignore */
+  }
+  return 'standard';
+}
+
+const VOICE_QUALITY_LABEL: Record<VoiceQuality, string> = {
+  premium:  'Premium · Neural',
+  enhanced: 'Enhanced',
+  standard: 'Standard',
+  checking: '···',
+};
+
+const VOICE_QUALITY_COLOR: Record<VoiceQuality, string> = {
+  premium:  '#7A9E7E',  // preludeSage — good
+  enhanced: '#7A9E7E',
+  standard: '#C8873A',  // preludeAmber — needs attention
+  checking: '#999',
+};
+
 interface SettingsRowProps {
   icon: string;
   label: string;
   value?: string;
+  valueColor?: string;
   onPress?: () => void;
   destructive?: boolean;
   chevron?: boolean;
   colors: ReturnType<typeof getColors>;
   isDark: boolean;
+  sublabel?: string;
 }
 
 function SettingsRow({
   icon,
   label,
   value,
+  valueColor,
   onPress,
   destructive,
   chevron = true,
   colors,
   isDark,
+  sublabel,
 }: SettingsRowProps) {
   return (
     <TouchableOpacity
@@ -52,18 +85,31 @@ function SettingsRow({
           color={destructive ? '#AE6B6B' : colors.amber}
           style={styles.rowIcon}
         />
-        <Text
-          style={[
-            styles.rowLabel,
-            { color: destructive ? '#AE6B6B' : colors.primary },
-          ]}
-        >
-          {label}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              styles.rowLabel,
+              { color: destructive ? '#AE6B6B' : colors.primary },
+            ]}
+          >
+            {label}
+          </Text>
+          {sublabel ? (
+            <Text style={[styles.rowSublabel, { color: colors.tertiary }]}>
+              {sublabel}
+            </Text>
+          ) : null}
+        </View>
       </View>
       <View style={styles.rowRight}>
         {value ? (
-          <Text style={[styles.rowValue, { color: colors.secondary }]} numberOfLines={1}>
+          <Text
+            style={[
+              styles.rowValue,
+              { color: valueColor ?? colors.secondary },
+            ]}
+            numberOfLines={1}
+          >
             {value}
           </Text>
         ) : null}
@@ -72,6 +118,96 @@ function SettingsRow({
         ) : null}
       </View>
     </TouchableOpacity>
+  );
+}
+
+interface VoiceSectionProps {
+  colors: ReturnType<typeof getColors>;
+  isDark: boolean;
+}
+
+function VoiceSection({ colors, isDark }: VoiceSectionProps) {
+  const [quality, setQuality] = useState<VoiceQuality>('checking');
+
+  useEffect(() => {
+    detectVoiceQuality().then(setQuality);
+  }, []);
+
+  function openVoiceSettings() {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('App-Prefs:root=ACCESSIBILITY&path=SPEECH').catch(() => {
+        Linking.openURL('prefs:root=ACCESSIBILITY&path=SPEECH').catch(() => {
+          Alert.alert(
+            'Open Voice Settings',
+            'Go to Settings → Accessibility → Spoken Content → Voices → English, then tap "Zoe" or "Evan" and download it.',
+            [{ text: 'Got it' }]
+          );
+        });
+      });
+    }
+  }
+
+  const needsImprovement = quality === 'standard';
+
+  return (
+    <>
+      <Text style={[styles.sectionLabel, { color: colors.tertiary }]}>VOICE</Text>
+      <View
+        style={[
+          styles.section,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <SettingsRow
+          icon="mic"
+          label="Voice Quality"
+          value={VOICE_QUALITY_LABEL[quality]}
+          valueColor={VOICE_QUALITY_COLOR[quality]}
+          onPress={undefined}
+          chevron={false}
+          colors={colors}
+          isDark={isDark}
+        />
+
+        {Platform.OS === 'ios' && needsImprovement ? (
+          <SettingsRow
+            icon="download"
+            label="Improve Voice"
+            sublabel="Download a neural voice in one tap"
+            onPress={openVoiceSettings}
+            colors={colors}
+            isDark={isDark}
+          />
+        ) : null}
+
+        {Platform.OS === 'ios' && !needsImprovement && quality !== 'checking' ? (
+          <SettingsRow
+            icon="check-circle"
+            label="Premium Voice Active"
+            sublabel="Prelude will speak in high-quality neural voice"
+            onPress={undefined}
+            chevron={false}
+            colors={colors}
+            isDark={isDark}
+          />
+        ) : null}
+
+        {Platform.OS === 'web' ? (
+          <SettingsRow
+            icon="info"
+            label="Voice on Web"
+            sublabel="Web preview uses your browser's built-in voices. The iOS app uses Apple neural TTS."
+            onPress={undefined}
+            chevron={false}
+            colors={colors}
+            isDark={isDark}
+          />
+        ) : null}
+      </View>
+    </>
   );
 }
 
@@ -117,7 +253,6 @@ export default function SettingsScreen() {
         { backgroundColor: isDark ? PreludeColors.depth.dark : PreludeColors.depth.light },
       ]}
     >
-      {/* Header */}
       <View
         style={[
           styles.header,
@@ -138,13 +273,13 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
       >
-        {/* Profile section */}
+        {/* Profile */}
         <Text style={[styles.sectionLabel, { color: colors.tertiary }]}>PROFILE</Text>
         <View
           style={[
             styles.section,
             {
-              backgroundColor: isDark ? colors.surface : colors.surface,
+              backgroundColor: colors.surface,
               borderColor: colors.border,
             },
           ]}
@@ -179,6 +314,9 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        {/* Voice */}
+        <VoiceSection colors={colors} isDark={isDark} />
+
         {/* AI & Privacy */}
         <Text style={[styles.sectionLabel, { color: colors.tertiary }]}>
           AI & PRIVACY
@@ -187,7 +325,7 @@ export default function SettingsScreen() {
           style={[
             styles.section,
             {
-              backgroundColor: isDark ? colors.surface : colors.surface,
+              backgroundColor: colors.surface,
               borderColor: colors.border,
             },
           ]}
@@ -227,7 +365,7 @@ export default function SettingsScreen() {
           style={[
             styles.section,
             {
-              backgroundColor: isDark ? colors.surface : colors.surface,
+              backgroundColor: colors.surface,
               borderColor: colors.border,
             },
           ]}
@@ -249,7 +387,6 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Prelude wordmark */}
         <View style={styles.wordmark}>
           <Text style={[styles.wordmarkText, { color: colors.tertiary }]}>
             Prelude
@@ -322,7 +459,12 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 15,
     fontFamily: 'Inter_400Regular',
-    flex: 1,
+  },
+  rowSublabel: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    marginTop: 2,
+    lineHeight: 16,
   },
   rowRight: {
     flexDirection: 'row',
