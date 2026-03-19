@@ -1,12 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
-  withSequence,
   withTiming,
-  interpolateColor,
   Easing,
 } from 'react-native-reanimated';
 import type { VoiceState } from '@/context/AppContext';
@@ -15,149 +13,121 @@ import { PreludeColors } from '@/constants/colors';
 interface PresenceShapeProps {
   voiceState: VoiceState;
   size?: number;
+  /** Live microphone amplitude 0–1. Drives reactive breathing when listening. */
+  amplitude?: number;
 }
 
-// Blob path control — a soft irregular organic shape
-// We simulate it via layered scaled ellipses with different border radii
-function BlobLayer({
-  scale,
-  opacity,
-  color,
-  size,
-  borderRadius,
-  rotate,
-}: {
-  scale: Animated.SharedValue<number>;
-  opacity: Animated.SharedValue<number>;
-  color: string;
-  size: number;
-  borderRadius: string;
-  rotate: Animated.SharedValue<number>;
-}) {
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { rotate: `${rotate.value}deg` },
-    ],
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          width: size,
-          height: size * 0.92,
-          backgroundColor: color,
-          borderRadius: (size / 2) * 0.95,
-        },
-        style,
-      ]}
-    />
-  );
-}
-
-export default function PresenceShape({ voiceState, size = 260 }: PresenceShapeProps) {
+export default function PresenceShape({
+  voiceState,
+  size = 260,
+  amplitude = 0,
+}: PresenceShapeProps) {
+  // ── Shared values ──────────────────────────────────────────────────────────
   const scale1 = useSharedValue(1);
   const scale2 = useSharedValue(0.88);
   const scale3 = useSharedValue(0.72);
   const opacity1 = useSharedValue(0.15);
-  const opacity2 = useSharedValue(0.1);
+  const opacity2 = useSharedValue(0.10);
   const opacity3 = useSharedValue(0.07);
   const rotate1 = useSharedValue(0);
-  const rotate2 = useSharedValue(12);
-  const colorProgress = useSharedValue(0); // 0 = calm, 1 = active, 2 = processing
 
-  // Outer ring (progress arc) — just a thin border
-  const ringScale = useSharedValue(1);
+  // Amplitude-driven reactive layer on top of the ambient breathing
+  const ampScale = useSharedValue(1);
 
+  // ── Animate on voiceState change ───────────────────────────────────────────
   useEffect(() => {
-    // Cancel previous animations
-    scale1.value = 1;
-    scale2.value = 0.88;
-    scale3.value = 0.72;
-
     if (voiceState === 'idle' || voiceState === 'listening') {
-      // Slow ambient breath — 4 seconds per cycle
+      // Slow ambient breath — autoreverse for seamless loop
       scale1.value = withRepeat(
-        withSequence(
-          withTiming(1.08, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
-          withTiming(0.97, { duration: 2000, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        false
+        withTiming(1.08, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+        -1, true
       );
       scale2.value = withRepeat(
-        withSequence(
-          withTiming(0.95, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
-          withTiming(0.84, { duration: 2400, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        false
+        withTiming(0.95, { duration: 2800, easing: Easing.inOut(Easing.sin) }),
+        -1, true
       );
       opacity1.value = withTiming(0.15, { duration: 600 });
       opacity2.value = withTiming(0.10, { duration: 600 });
       opacity3.value = withTiming(0.07, { duration: 600 });
       rotate1.value = withRepeat(
         withTiming(360, { duration: 18000, easing: Easing.linear }),
-        -1,
-        false
+        -1, false
       );
     } else if (voiceState === 'speaking') {
-      // Expanded, fuller form with soft pulse
+      // Fuller, expanded form with soft pulse
       scale1.value = withRepeat(
-        withSequence(
-          withTiming(1.18, { duration: 900, easing: Easing.inOut(Easing.sin) }),
-          withTiming(1.12, { duration: 900, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        false
+        withTiming(1.18, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
+        -1, true
       );
       scale2.value = withRepeat(
-        withSequence(
-          withTiming(1.04, { duration: 1100, easing: Easing.inOut(Easing.sin) }),
-          withTiming(0.97, { duration: 1100, easing: Easing.inOut(Easing.sin) })
-        ),
-        -1,
-        false
+        withTiming(1.04, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+        -1, true
       );
       opacity1.value = withTiming(0.22, { duration: 800 });
       opacity2.value = withTiming(0.14, { duration: 800 });
       opacity3.value = withTiming(0.09, { duration: 800 });
     } else if (voiceState === 'processing') {
-      // Contract gently and hold still
+      // Contract and hold still
       scale1.value = withTiming(0.88, { duration: 800, easing: Easing.out(Easing.exp) });
       scale2.value = withTiming(0.74, { duration: 900, easing: Easing.out(Easing.exp) });
       scale3.value = withTiming(0.58, { duration: 1000, easing: Easing.out(Easing.exp) });
-      opacity1.value = withTiming(0.12, { duration: 600 });
-      opacity2.value = withTiming(0.08, { duration: 600 });
-      opacity3.value = withTiming(0.05, { duration: 600 });
-    } else if (voiceState === 'paused') {
-      scale1.value = withTiming(0.95, { duration: 600 });
       opacity1.value = withTiming(0.10, { duration: 600 });
+      opacity2.value = withTiming(0.07, { duration: 600 });
+      opacity3.value = withTiming(0.04, { duration: 600 });
+    } else if (voiceState === 'paused') {
+      scale1.value = withTiming(0.94, { duration: 600 });
+      scale2.value = withTiming(0.78, { duration: 700 });
+      opacity1.value = withTiming(0.08, { duration: 600 });
+      opacity2.value = withTiming(0.05, { duration: 600 });
     } else if (voiceState === 'ended') {
-      scale1.value = withTiming(0.85, { duration: 1200 });
-      opacity1.value = withTiming(0.08, { duration: 1200 });
-      opacity2.value = withTiming(0.05, { duration: 1200 });
-      opacity3.value = withTiming(0.03, { duration: 1200 });
+      scale1.value = withTiming(0.82, { duration: 1200 });
+      opacity1.value = withTiming(0.06, { duration: 1200 });
+      opacity2.value = withTiming(0.04, { duration: 1200 });
+      opacity3.value = withTiming(0.02, { duration: 1200 });
     }
   }, [voiceState]);
 
-  // Color based on state
+  // ── Amplitude reaction — drives ampScale smoothly ──────────────────────────
+  useEffect(() => {
+    // Amplitude 0–1 → additional scale 1.0–1.25 on the outer layer
+    // Use a fast withTiming so it tracks the mic in near real-time
+    const target = 1 + amplitude * 0.28;
+    ampScale.value = withTiming(target, { duration: 80, easing: Easing.out(Easing.quad) });
+  }, [amplitude]);
+
+  // ── State color ────────────────────────────────────────────────────────────
   const stateColor =
-    voiceState === 'speaking'
-      ? PreludeColors.calm
-      : voiceState === 'processing'
+    voiceState === 'processing'
       ? PreludeColors.processing
+      : voiceState === 'speaking'
+      ? PreludeColors.calm
       : PreludeColors.calm;
+
+  // ── Animated styles ────────────────────────────────────────────────────────
+  const outerStyle = useAnimatedStyle(() => ({
+    opacity: opacity3.value,
+    transform: [
+      { scale: scale1.value * ampScale.value },
+      { rotate: `${rotate1.value}deg` },
+    ],
+  }));
+
+  const midStyle = useAnimatedStyle(() => ({
+    opacity: opacity2.value,
+    transform: [{ scale: scale2.value * (1 + (ampScale.value - 1) * 0.6) }],
+  }));
+
+  const coreStyle = useAnimatedStyle(() => ({
+    opacity: opacity1.value,
+    transform: [{ scale: scale3.value * (1 + (ampScale.value - 1) * 0.35) }],
+  }));
 
   return (
     <View
       style={[styles.container, { width: size, height: size }]}
       accessibilityLabel={`Presence indicator, currently ${voiceState}`}
     >
-      {/* Outermost glow layer */}
+      {/* Outermost glow */}
       <Animated.View
         style={[
           styles.layer,
@@ -166,13 +136,12 @@ export default function PresenceShape({ voiceState, size = 260 }: PresenceShapeP
             height: size * 1.1,
             backgroundColor: stateColor,
             borderRadius: size * 0.55,
-            opacity: opacity3,
-            transform: [{ scale: scale1 }],
           },
+          outerStyle,
         ]}
       />
 
-      {/* Middle layer — slightly different shape */}
+      {/* Mid layer — slightly different shape */}
       <Animated.View
         style={[
           styles.layer,
@@ -181,13 +150,12 @@ export default function PresenceShape({ voiceState, size = 260 }: PresenceShapeP
             height: size * 0.9,
             backgroundColor: stateColor,
             borderRadius: size * 0.42,
-            opacity: opacity2,
-            transform: [{ scale: scale2 }, { rotate: '8deg' }],
           },
+          midStyle,
         ]}
       />
 
-      {/* Core layer */}
+      {/* Core */}
       <Animated.View
         style={[
           styles.layer,
@@ -196,13 +164,12 @@ export default function PresenceShape({ voiceState, size = 260 }: PresenceShapeP
             height: size * 0.66,
             backgroundColor: stateColor,
             borderRadius: size * 0.32,
-            opacity: opacity1,
-            transform: [{ scale: scale3 }],
           },
+          coreStyle,
         ]}
       />
 
-      {/* Subtle progress ring — thin arc at edge */}
+      {/* Edge ring */}
       <View
         style={[
           styles.ring,
@@ -212,8 +179,8 @@ export default function PresenceShape({ voiceState, size = 260 }: PresenceShapeP
             borderRadius: (size + 2) / 2,
             borderColor:
               voiceState === 'listening'
-                ? `${PreludeColors.calm}40`
-                : `${stateColor}20`,
+                ? `${PreludeColors.calm}50`
+                : `${stateColor}25`,
           },
         ]}
       />

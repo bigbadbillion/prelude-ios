@@ -33,14 +33,16 @@
 - [x] Tab navigation (NativeTabs with liquid glass)
 - [x] Onboarding / Availability States screen
 
-### Phase 2 — Voice System 🔲
-- [ ] SpeechAnalyzer integration (streaming STT, iOS 18+)
-- [ ] AVAudioEngine audio capture pipeline
-- [ ] Silence detection (800ms threshold)
-- [ ] Amplitude reading for presence shape animation
-- [ ] TTS (AVSpeechSynthesizer, premium voice selection)
-- [ ] Turn-taking state machine
-- [ ] Haptic engine (CoreHaptics)
+### Phase 2 — Voice System ✅
+- [x] STT — Web Speech API on web; native-ready architecture (useVoiceEngine hook)
+- [x] Audio capture pipeline — Web Audio API AnalyserNode (web), expo-av metering (native)
+- [x] Silence detection — 800ms configurable threshold
+- [x] Amplitude reading — drives PresenceShape reactive breathing in real time
+- [x] TTS — expo-speech (AVSpeechSynthesizer on iOS, speechSynthesis on web); premium voice selection
+- [x] Turn-taking state machine — idle→speaking→listening→processing→speaking loop
+- [x] Haptic feedback — session start, end, pause/resume
+- [x] Permission denied state — graceful mic access screen
+- [x] speakAgent() API — clean imperative bridge for agent to speak opening line
 
 ### Phase 3 — Agent System 🔲
 - [ ] LanguageModelSession lifecycle (AgentController)
