@@ -64,18 +64,18 @@ function AmbientBlob({
   const scale = useSharedValue(1);
 
   useEffect(() => {
+    // Rotation: 0→360 with repeat. Since 360deg≡0deg the reset is invisible.
+    rotate.value = rotateOffset;
     rotate.value = withRepeat(
       withTiming(rotateOffset + 360, { duration: rotateDuration, easing: Easing.linear }),
       -1,
       false
     );
+    // Scale: autoreverse guarantees a seamless loop — no end-value jump.
     scale.value = withRepeat(
-      withSequence(
-        withTiming(1.06, { duration: breathDuration, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.96, { duration: breathDuration, easing: Easing.inOut(Easing.sin) })
-      ),
+      withTiming(1.05, { duration: breathDuration, easing: Easing.inOut(Easing.sin) }),
       -1,
-      false
+      true
     );
   }, []);
 
@@ -117,13 +117,11 @@ export default function HomeScreen() {
     headerOpacity.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.exp) });
     contentOpacity.value = withTiming(1, { duration: 1100, easing: Easing.out(Easing.exp) });
     contentY.value = withTiming(0, { duration: 1000, easing: Easing.out(Easing.exp) });
+    // Autoreverse: 1.0→1.015→1.0→... no end-value snap.
     buttonScale.value = withRepeat(
-      withSequence(
-        withTiming(1.015, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.985, { duration: 3200, easing: Easing.inOut(Easing.sin) })
-      ),
+      withTiming(1.015, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
       -1,
-      false
+      true
     );
   }, []);
 
@@ -312,7 +310,7 @@ export default function HomeScreen() {
                 ]}
               >
                 <Text style={[styles.durationText, { color: colors.sage }]}>
-                  {lastSession.durationMinutes ?? 18} min
+                  {Math.round((lastSession.durationSeconds ?? 1080) / 60)} min
                 </Text>
               </View>
             </View>
