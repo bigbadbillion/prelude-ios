@@ -134,17 +134,27 @@ function VoiceSection({ colors, isDark }: VoiceSectionProps) {
   }, []);
 
   function openVoiceSettings() {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('App-Prefs:root=ACCESSIBILITY&path=SPEECH').catch(() => {
-        Linking.openURL('prefs:root=ACCESSIBILITY&path=SPEECH').catch(() => {
-          Alert.alert(
-            'Open Voice Settings',
-            'Go to Settings → Accessibility → Spoken Content → Voices → English, then tap "Zoe" or "Evan" and download it.',
-            [{ text: 'Got it' }]
-          );
-        });
+    if (Platform.OS !== 'ios') return;
+
+    const VOICE_INSTRUCTIONS =
+      'In the Settings app:\n\n' +
+      'Accessibility → Spoken Content → Voices → English\n\n' +
+      'Tap "Zoe" or "Evan", then tap Download. Once installed, Prelude will use it automatically.';
+
+    // iOS 18 broke many nested deep links. Try the most-specific URL first,
+    // then progressively fall back to broader ones, then show instructions.
+    Linking.openURL('prefs:root=ACCESSIBILITY&path=SPEECH_TITLE/QuickSpeakAccents')
+      .catch(() =>
+        Linking.openURL('prefs:root=ACCESSIBILITY&path=SPEECH_TITLE')
+      )
+      .catch(() =>
+        Linking.openURL('prefs:root=ACCESSIBILITY')
+      )
+      .catch(() => {
+        Alert.alert('Download a Premium Voice', VOICE_INSTRUCTIONS, [
+          { text: 'Got it' },
+        ]);
       });
-    }
   }
 
   const needsImprovement = quality === 'standard';
@@ -176,7 +186,7 @@ function VoiceSection({ colors, isDark }: VoiceSectionProps) {
           <SettingsRow
             icon="download"
             label="Improve Voice"
-            sublabel="Download a neural voice in one tap"
+            sublabel="Opens Accessibility → Spoken Content → Voices"
             onPress={openVoiceSettings}
             colors={colors}
             isDark={isDark}
