@@ -1,0 +1,96 @@
+Let me research the current state of this properly before giving you an answer.​​​​​​​​​​​​​​​​
+
+Good that you asked before going down the Dia path. Here’s the full honest picture.
+
+Dia Is Not an Option for iOS — Here’s Why
+
+Dia requires approximately 10GB of VRAM and runs optimally on GPUs like an NVIDIA A4000. ￼ It’s a Python/PyTorch model built for CUDA GPU inference. There is no Core ML conversion, no iPhone runtime, and no way to run it on-device on iOS. The Replit agent’s Qwen3 TTS suggestion has the same problem — these are server-side GPU models being suggested for a mobile context where they simply don’t run. The 1GB download is actually the smallest of the problems; the bigger one is that there’s no GPU to run it on.
+
+The Real Problem — and It’s Fixable Without Any Extra Downloads
+
+The robotic sound you’re hearing is almost certainly the compact voice, which ships pre-installed with iOS. Apple actually has three voice quality tiers:
+
+
+
+|Tier        |How it sounds                  |How it’s installed         |
+|------------|-------------------------------|---------------------------|
+|**Compact** |Robotic, the one you’re hearing|Ships with iOS, no download|
+|**Enhanced**|Noticeably more natural        |~50MB, OS-managed download |
+|**Premium** |Siri-quality, genuinely human  |~150MB, OS-managed download|
+
+The critical distinction: a Premium quality voice must be downloaded to use ￼ — but this download is managed by the operating system, not your app. It does not appear as an in-app download step. iOS handles it silently in the background, and on many devices the Premium voices are already present because the user has Siri, VoiceOver, or Live Speech enabled.
+
+This means the fix is likely just a few lines of code — you’re probably not requesting the right voice tier.
+
+The Fix — Filter for Premium First
+
+func selectBestAvailableVoice() -> AVSpeechSynthesisVoice? {
+    let allVoices = AVSpeechSynthesisVoice.speechVoices()
+
+    // Try Premium first — Siri-quality, human-sounding
+    let premium = allVoices.first {
+        $0.language.hasPrefix("en") &&
+        $0.quality == .premium &&
+        !$0.voiceTraits.contains(.isNoveltyVoice)
+    }
+    if let voice = premium { return voice }
+
+    // Fall back to Enhanced — still much better than Compact
+    let enhanced = allVoices.first {
+        $0.language.hasPrefix("en") &&
+        $0.quality == .enhanced &&
+        !$0.voiceTraits.contains(.isNoveltyVoice)
+    }
+    if let voice = enhanced { return voice }
+
+    // Last resort — Compact (what you're currently using)
+    return AVSpeechSynthesisVoice(language: "en-US")
+}
+
+
+Run this and log what quality level it returns. If it’s returning .default or .compact, the Premium voices aren’t downloaded yet on your test device.
+
+How to Trigger the Premium Voice Download Without Disrupting UX
+
+If Premium isn’t available on a user’s device, you can trigger the OS download gracefully — with zero UI friction for the user:
+
+func ensurePremiumVoiceAvailable() {
+    // This triggers a background OS download if needed.
+    // No UI shown to the user. iOS handles it silently.
+    let preflight = AVSpeechSynthesizer()
+    let testUtterance = AVSpeechUtterance(string: " ")
+
+    // Request a premium voice — iOS will queue the download
+    if let voice = AVSpeechSynthesisVoice.speechVoices().first(where: {
+        $0.quality == .premium && $0.language.hasPrefix("en")
+    }) {
+        testUtterance.voice = voice
+        preflight.speak(testUtterance)
+        preflight.stopSpeaking(at: .immediate)
+    }
+}
+
+
+Call this on app launch. iOS queues the download in the background. By the time the user starts their first session — a few minutes later — the Premium voice is ready. No progress bar, no “downloading voice model” screen, no extra step for the user.
+
+The Wildcard: Personal Voice
+
+iOS 17 introduced Personal Voice, which lets users create an AI-generated voice that sounds like them by reading 150 text prompts over about 15 minutes. ￼ Apps can request permission to use it once the user enables “Allow Apps to Request to Use” in Settings. ￼
+
+For Prelude specifically, this is worth considering as an optional premium feature — not the default. Having your own voice read your therapy brief back to you is genuinely unlike anything else in the space. The setup cost (15 minutes, user-initiated) is high, but the payoff — hearing yourself summarized in your own voice — is emotionally distinct from any synthesized voice. It’s also completely on-device, free, and private.
+
+You’d offer it as: “Use your own voice to read your briefs back to you” — opt-in, framed as a feature, not a workaround.
+
+What to Do Right Now
+
+	1.	Add this one-liner to your TTS setup and log the output:
+
+let voices = AVSpeechSynthesisVoice.speechVoices()
+voices.forEach { print($0.name, $0.quality.rawValue) }
+
+
+That tells you exactly which voices are available on your test device.
+
+	2.	If no Premium voices appear: go to Settings → Accessibility → Spoken Content → Voices → English and download a Premium voice manually. Then re-run your app. If the robotic quality disappears, your only problem is that you weren’t requesting the right tier — and the OS-managed background download approach above solves it completely without any UX cost.
+
+The robotic voice problem almost certainly has a same-day fix. No 1GB model. No extra download screen. No ElevenLabs. Just the OS voices you’re not currently targeting.​​​​​​​​​​​​​​​​
