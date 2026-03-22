@@ -13,8 +13,19 @@
 | Platform | iOS 26+ / iPhone with Apple Intelligence |
 | Minimum Device | iPhone 15 Pro (A17 Pro) |
 | AI Runtime | Foundation Models (on-device, zero API cost) |
-| Last Updated | March 19, 2026 |
-| Build Status | 🟡 In Progress |
+| Last Updated | March 21, 2026 |
+| Build Status | 🟡 In Progress — Phase 4 memory / briefs shipped; polish in Phase 5 |
+
+---
+
+## How we update this document
+
+- **Current focus:** One optional line under this section naming the single active task (clear when idle).
+- **In progress:** Prefix a Phase checkbox line with `🔄` and a short parenthetical, e.g. `🔄 (in progress — Foundation Models wiring)`.
+- **Done:** Use `[x]`, remove `🔄`, and append **`Files:`** with a comma-separated list of repo paths touched for that item (use a sub-bullet list if long).
+- Keep **§12 Build Phases & Task Tracker** aligned with the Phase sections above whenever phase status changes.
+
+**Current focus:** (none)
 
 ---
 
@@ -44,24 +55,29 @@
 - [x] Permission denied state — graceful mic access screen
 - [x] speakAgent() API — clean imperative bridge for agent to speak opening line
 
-### Phase 3 — Agent System 🔲
-- [ ] LanguageModelSession lifecycle (AgentController)
-- [ ] @Generable AgentDecision struct
-- [ ] Conversation phases (warmOpen → openField → excavation → readBack → closing)
-- [ ] Tool implementations (SaveInsight, TagEmotion, GenerateCard, etc.)
-- [ ] PromptBuilder (phase-sensitive system prompts)
-- [ ] Safety override / crisis detection
-- [ ] Brief generation
+### Phase 3 — Agent System ✅
+- [x] LanguageModelSession lifecycle (AgentController) — **Files:** Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift
+- [x] @Generable AgentDecision struct — **Files:** Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Agent/AgentDecision.swift
+- [x] Conversation phases (warmOpen → openField → excavation → readBack → closing) — **Files:** Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/PreludeAgentPrompts.swift
+- [x] Tool implementations (SaveInsight, TagEmotion, GenerateCard, etc.) — **Files:** Prelude/Prelude/Tools/SaveInsightTool.swift, Prelude/Prelude/Tools/TagEmotionTool.swift, Prelude/Prelude/Tools/GenerateCardTool.swift, Prelude/Prelude/Tools/GetPastInsightsTool.swift, Prelude/Prelude/Tools/EndSessionTool.swift, Prelude/Prelude/Tools/ToolRegistry.swift, Prelude/Prelude/Tools/ToolExecutionContext.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift
+- [x] PreludeAgentPrompts (phase-sensitive system prompts; Foundation `Instructions`) — **Files:** Prelude/Prelude/Agent/PreludeAgentPrompts.swift
+- [x] Safety override / crisis detection — **Files:** Prelude/Prelude/App/CrisisDetection.swift, Prelude/Prelude/Voice/VoiceEngine.swift
+- [x] Brief generation — **Files:** Prelude/Prelude/Tools/SummarizeSessionTool.swift, Prelude/Prelude/UI/Session/SessionView.swift
+- [x] Device-only live agent (no scripted fallback when model eligible) + opening line from model — **Files:** Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/UI/Session/SessionView.swift, Prelude/Prelude/Voice/VoiceEngine.swift
+- [x] Resilient model calls (lenient `action` mapping, tool-free opening `GenerableOpeningUtterance`, tool/text retry, `Logger` + NSError) — **Files:** Prelude/Prelude/Agent/AgentDecision.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift
+- [x] Xcode / README — **Files:** Prelude/Prelude.xcodeproj/project.pbxproj, Prelude/scripts/generate_xcode_project.py, Prelude/README.md
 
-### Phase 4 — Memory & Persistence 🔲
-- [ ] SwiftData schema (Session, Insight, SessionCard, SessionBrief, WeeklyBrief, EmotionalArc)
-- [ ] MemoryStore / SessionStore / InsightStore / BriefStore
-- [ ] PatternDetector (cross-session theme analysis)
-- [ ] Weekly brief generation
+### Phase 4 — Memory & Persistence ✅
+- [x] SwiftData schema (Session, Insight, SessionCard, SessionBrief, WeeklyBrief, EmotionalArc) — **Files:** Prelude/Prelude/Models/SwiftDataModels.swift
+- [x] MemoryStore / SessionStore / InsightStore / BriefStore — **Files:** Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/Memory/SessionStore.swift, Prelude/Prelude/Memory/InsightStore.swift, Prelude/Prelude/Memory/BriefStore.swift
+- [x] PatternDetector (cross-session theme analysis; consecutive-session streak for pattern card) — **Files:** Prelude/Prelude/Memory/PatternDetector.swift, Prelude/Prelude/Tools/CheckPatternsTool.swift
+- [x] Weekly brief generation (2+ sessions in calendar week gate; on-device FM + template fallback) — **Files:** Prelude/Prelude/Memory/BriefStore.swift, Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift, Prelude/Prelude/UI/Root/RootView.swift
+- [x] Session brief synthesis (insights/cards; not raw transcript; FM + fallback) — **Files:** Prelude/Prelude/Memory/BriefStore.swift, Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift, Prelude/Prelude/Tools/SummarizeSessionTool.swift, Prelude/Prelude/UI/Session/SessionView.swift
 
-### Phase 5 — Availability & Polish 🔲
-- [ ] ModelAvailabilityState guard pattern on every session start
-- [ ] User-facing availability states (warm copy, not error messages)
+### Phase 5 — Availability & Polish 🟡
+- [x] ModelAvailabilityState guard pattern on every session start — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Home/HomeView.swift
+- [x] User-facing availability states (warm copy, not error messages) — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/UI/Onboarding/OnboardingView.swift
+- [x] Settings — Apple Intelligence / on-device model status, diagnostics line, Refresh — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift
 - [ ] Reduce Motion accessibility support
 - [ ] Dynamic Type support
 - [ ] VoiceOver labels on custom shapes
@@ -176,14 +192,14 @@ During session, agent calls `saveInsight()` silently when it detects emotionally
 **Insight dimensions:** Theme, Emotion, Concern, Goal, Conflict
 
 ### F4 — Session Brief
-Five to seven structured cards covering:
+Generated after every session. **Dedicated brief agent:** a separate on-device **`LanguageModelSession`** from the live coach, with its own **`setBriefSection`** tool, fills the brief from **`Session.userTranscriptLog`** plus insights/cards. **weighing_on_me** (shown as WEIGHING ON ME) should be a **near-verbatim** excerpt from USER SPOKE; other sections (**emotional_state**, **key_emotion**, **what_to_say**, threads, goals) are **inferred** in warm first person from what the conversation implies — not a full transcript paste. **`emotional_read`** stores a short **affective analysis** of the generated brief (tone, not diagnosis), shown as “How this brief reads.” Fallback: single-shot structured generation, then card/insight assembly. Five to seven structured cards covering:
 1. How I showed up today (emotional state)
 2. The thing that's really weighing on me
 3. Key emotion underneath it
 4. What I want to make sure I say
 5. An unresolved thread worth exploring
 6. What I'm hoping therapy helps with today
-7. Pattern note (if recurring theme detected across 3+ sessions)
+7. Pattern note (if the same recurring **theme** appears across **3+ consecutive** completed sessions — chronological; see prelude-ios-prd Phase 4.6)
 
 ### F5 — Session History & Emotional Patterns
 - Chronological list of past sessions with brief previews
@@ -192,17 +208,21 @@ Five to seven structured cards covering:
 - Weekly brief combining multiple sessions
 
 ### F6 — Weekly Brief
-Generated after the week's sessions. Surfaces:
+**Generation runs only when there are 2+ completed sessions in the current calendar week** (prelude-ios-prd Phase 6.2); otherwise the Weekly tab keeps empty-state copy until the threshold is met. Uses on-device Foundation Models when available, with a deterministic template fallback. Surfaces:
 - Recurring themes across the week
-- Emotional patterns
+- Emotional patterns (what dominated, what shifted)
 - One reflection prompt for the upcoming session
 
 ### F7 — Memory System
 Local only. SwiftData. No iCloud sync in V1.
 
+**Deferred vs original prelude-ios-prd §8 (not v1):** `EmotionLabel.ashamed`; full `EmotionalArc` (opening/closing emotion, ordered sequence, peak timestamp) — app uses a minimal `EmotionalArc.summary` string until a schema pass adds parity.
+
 ---
 
 ## 5. Foundation Models Architecture
+
+*Implementation pitfalls, retries, and file map: see **§15 Apple Intelligence & Foundation Models — lessons learned**.*
 
 ### The Entry Point: LanguageModelSession
 ```swift
@@ -566,7 +586,8 @@ Prelude/
 │   └── AppState.swift            — global state machine
 ├── Agent/
 │   ├── AgentController.swift     — LanguageModelSession lifecycle, agent loop
-│   ├── PromptBuilder.swift       — phase-sensitive system prompts
+│   ├── PreludeAgentPrompts.swift — phase-sensitive prompts + Foundation `Instructions`
+│   ├── FoundationModelsIntegration.swift — @Generable decision, Tool adapters, model turn
 │   ├── AgentDecision.swift       — @Generable AgentDecision struct
 │   └── ConversationPhase.swift   — phase enum and transition logic
 ├── Tools/
@@ -625,11 +646,11 @@ Prelude/
 
 | Phase | Description | Status |
 |---|---|---|
-| Phase 1 | UI Scaffold — all screens, navigation, design system | 🟡 In Progress |
-| Phase 2 | Voice System — STT, TTS, amplitude, turn-taking | 🔲 Not Started |
-| Phase 3 | Agent System — LanguageModelSession, tools, prompts | 🔲 Not Started |
-| Phase 4 | Memory & Persistence — SwiftData models | 🔲 Not Started |
-| Phase 5 | Availability, accessibility, App Store compliance | 🔲 Not Started |
+| Phase 1 | UI Scaffold — all screens, navigation, design system | ✅ Done |
+| Phase 2 | Voice System — STT, TTS, amplitude, turn-taking | ✅ Done |
+| Phase 3 | Agent System — LanguageModelSession, tools, prompts | ✅ Done |
+| Phase 4 | Memory & Persistence — SwiftData, stores, patterns, weekly + session briefs | ✅ Done |
+| Phase 5 | Availability, accessibility, App Store compliance | 🟡 In Progress (availability + Settings AI indicator; manifest partial) |
 
 ---
 
@@ -648,9 +669,51 @@ Prelude/
 
 | Risk | Mitigation |
 |---|---|
+| On-device model not available in Simulator | `PreludeModelAvailability.shouldAttemptFoundationModels` is false on Simulator; session uses the scripted fallback. Test Apple Intelligence paths on a physical device with iOS 26+. |
+| `SystemLanguageModel` reports available but `respond` still fails | See **§15** (tool-free opening, turn retry without tools, lenient action mapping, console logging). Settings shows live vs scripted + diagnostics string. |
+| Strict `@Generable` / `action` strings from the model | Use **lenient** mapping to `AgentAction` and require non-empty `spokenResponse`; do not discard a good utterance because `action` ≠ exact `rawValue`. |
+| Audio / STT errors (`AURemoteIO`, zero buffer size) | Separate from model availability; tune **AVAudioSession** and capture path (`SpeechRecognizerService`). Model can work while mic pipeline is flaky. |
 | Foundation Models API changes before iOS 26 release | Follow WWDC session notes, use availability guards |
 | 3B model quality insufficient for emotional nuance | Prompt engineering, constrained output via @Generable |
 | SpeechAnalyzer latency in noisy environments | 800ms silence threshold is configurable; fall back to SFSpeechRecognizer |
 | Thermal throttling during long sessions | Detect and gracefully pause session |
 | User in genuine crisis | Robust crisis detection keywords + immediate 988 routing |
 | App Review rejection for mental health content | Medical disclaimer, clear "not therapy" framing in metadata |
+
+---
+
+## 15. Apple Intelligence & Foundation Models — lessons learned
+
+*Engineering notes from shipping **LanguageModelSession** on device (validated March 2026). Aligns with Apple’s documented APIs: `LanguageModelSession(model:tools:instructions:)`, `respond(to:generating:includeSchemaInPrompt:)`, `Prompt { }`, `SystemLanguageModel.default.availability`.*
+
+1. **Availability ≠ success** — `SystemLanguageModel.default.availability == .available` only means the stack *can* run. **`respond` can still throw** or return unusable structured output. Falling back **silently** to a fixed script made it look like “mock mode” while AI was enabled.
+
+2. **Don’t hide failures on device** — When the live model is eligible, **avoid scripted fallbacks** for turns (or users cannot tell model vs script). Surface a short spoken error or retry; log **`NSError` domain/code** via `Logger` (subsystem = bundle id, category `FoundationModels`).
+
+3. **Lenient structured output** — On-device models often emit **non-exact** `action` labels (e.g. synonyms). **`AgentAction.lenient(from:)`** maps synonyms and defaults unknown values to **`respond`** so valid **`spokenResponse`** text is not dropped.
+
+4. **Start simple on the first call** — Registering **many tools** plus a **multi-field** `@Generable` on the **first** `respond` (session opening) was brittle. **Mitigations:** (a) **`GenerableOpeningUtterance`** — single `spokenResponse` field; (b) **tool-free** `LanguageModelSession` for opening; (c) **recreate** the session when switching **no-tools → with-tools** for later turns (`foundationSessionUsesTools` on `AgentController`).
+
+5. **Retry without tools** — If `respond` fails with the full tool registry, **clear the session** and **retry once** with **`tools: []`** so conversation can continue while tool schemas are debugged.
+
+6. **Deployment target** — `@Generable` / macro-generated code required **`IPHONEOS_DEPLOYMENT_TARGET = 26.0`** for this project (see `project.pbxproj` / `generate_xcode_project.py`).
+
+7. **Tool execution on the main actor** — SwiftData + `ModelContext` in tool bodies: use a **`@MainActor`** helper (`PreludeFMToolRunner`) from `Tool.call(arguments:)` rather than incorrect `MainActor.run` overloads.
+
+8. **Naming** — Renamed app prompts to **`PreludeAgentPrompts`** to avoid clashing with **FoundationModels’** `PromptBuilder` / `Prompt` DSL.
+
+9. **PRD / agent workflow** — Cursor rule **`.cursor/rules/prelude-prd-tracker.mdc`** keeps this document as the living tracker (in-progress markers, **Files:** on completion).
+
+### Key files (Foundation Models iteration)
+
+| Area | Paths |
+|---|---|
+| Session + turns | `Prelude/Prelude/Agent/AgentController.swift`, `Prelude/Prelude/Agent/FoundationModelsIntegration.swift` |
+| Decision / actions | `Prelude/Prelude/Agent/AgentDecision.swift` |
+| Instructions | `Prelude/Prelude/Agent/PreludeAgentPrompts.swift` |
+| Availability / diagnostics | `Prelude/Prelude/App/ModelAvailabilityState.swift`, `Prelude/Prelude/App/AppState.swift` |
+| Voice / session UI | `Prelude/Prelude/Voice/VoiceEngine.swift`, `Prelude/Prelude/UI/Session/SessionView.swift` |
+| Settings indicator | `Prelude/Prelude/UI/Settings/SettingsView.swift` |
+| Tools + context | `Prelude/Prelude/Tools/*.swift` (esp. Save/Tag/Generate/GetPast + `ToolExecutionContext.swift`) |
+| Brief synthesis (session + weekly) | `Prelude/Prelude/Memory/BriefStore.swift`, `Prelude/Prelude/Memory/BriefGenerationDraft.swift`, `Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift`, `Prelude/Prelude/Agent/PreludeBriefAgent.swift`, `Prelude/Prelude/Memory/PatternDetector.swift`, `Prelude/Prelude/Memory/SessionStore.swift`, `Prelude/Prelude/Memory/InsightStore.swift` |
+| Project / docs | `Prelude/Prelude.xcodeproj/project.pbxproj`, `Prelude/scripts/generate_xcode_project.py`, `Prelude/README.md`, `.cursor/rules/prelude-prd-tracker.mdc` |

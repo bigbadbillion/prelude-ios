@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Native Prelude Xcode
+Prelude/build/
+*.xcuserstate

@@ -1,0 +1,14 @@
+---
+description: Keep PRELUDE_PRD.md as the living build tracker for Prelude iOS; update it whenever finishing PRD-scoped work.
+alwaysApply: true
+---
+
+# Prelude PRD progress workflow
+
+1. **Source of truth:** [PRELUDE_PRD.md](PRELUDE_PRD.md) is the authoritative **progress tracker** (checkboxes, Files:, current focus). For **product spec** details, if it disagrees with [prelude-ios-prd.md](prelude-ios-prd.md), treat **prelude-ios-prd.md** as canonical and update PRELUDE_PRD.md to match in the same change set when practical.
+
+2. **When starting a PRD-scoped task:** In the relevant Phase checklist, mark the item as in progress using the conventions in the PRD **“How we update this document”** section (e.g. prefix with `🔄` and a short parenthetical). Set **Current focus** to that task.
+
+3. **When finishing:** Mark the checkbox `[x]`, remove `🔄`, append **`Files:`** with the repo-relative paths you changed for that item, clear **Current focus**, and update **§12 Build Phases & Task Tracker** if phase status changed.
+
+4. **Scope:** Any change that completes, materially advances, or reprioritizes a tracked PRD item should include a PRD update in the same change set when practical.
