@@ -79,6 +79,7 @@
 - [x] User-facing availability states (warm copy, not error messages) — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/UI/Onboarding/OnboardingView.swift
 - [x] Settings — Apple Intelligence / on-device model status, diagnostics line, Refresh, Danger “clear all data” — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/App/UserSettings.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Root/RootView.swift, Prelude/Prelude/App/PreludeHaptics.swift
 - [x] Presence — ambient breath + dual reactivity (mic smoothing while listening; TTS `willSpeakRange` envelope while agent speaks; prelude-ios §10.5) — **Files:** Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/PresenceShapeView.swift
+- [x] Session read-back recap (gathered themes / invitation to add or confirm) + live transcript autoscroll — **Files:** Prelude/Prelude/Agent/PreludeAgentPrompts.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/SessionView.swift, PRELUDE_PRD.md, prelude-ios-prd.md
 - [ ] Dynamic Type support
 - [ ] VoiceOver labels on custom shapes
 - [ ] App Store privacy manifest
@@ -182,6 +183,8 @@ Loop continues until agent or user ends session
 ```
 
 **Target duration:** 8–12 minutes. Agent guides pacing. No hard cutoff.
+
+**Read-back (toward session end):** In the **readBack** phase, the agent **recaps aloud** what it gathered (main threads, emotional tone, what seems important to bring to therapy) so the user can judge whether to **add more** or whether it **feels sufficient** before closing and brief generation.
 
 ### F2 — Agentic Conversation Engine
 Tool-based agent loop. Not a chatbot. The agent has a goal: surface what the user needs to bring to therapy. See Section 6 for full architecture.
@@ -520,7 +523,7 @@ Behavior:
 
 **Zone 2 — The Ground (bottom 40%)**
 - Agent's current text: New York Regular, fades in word-by-word with TTS
-- Transcript scroll: SF Mono, low opacity, barely visible
+- Transcript scroll: SF Mono, low opacity, barely visible; **auto-scrolls** so the latest finalized line and live partial caption stay in view
 
 **Controls:** Pause / End session / Crisis resource (small "?" corner)
 

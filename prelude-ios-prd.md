@@ -146,6 +146,8 @@ Loop continues until agent or user ends session
 
 **Session duration:** 8–12 minutes target. Agent guides pacing. No hard cutoff.
 
+**Read-back:** In **readBack**, the agent **recaps aloud** what it gathered from the session so the user can decide whether to **add more** or confirm it **feels sufficient** before closing and brief generation.
+
 ### F2 — Agentic Conversation Engine
 
 Tool-based agent loop. Not a chatbot. The agent has a goal: surface what the user needs to bring to therapy. It pursues that goal through structured questions and reflection, not open-ended chat.
@@ -410,7 +412,7 @@ struct PromptBuilder {
         case .excavation:
             "Phase: EXCAVATE. Follow the highest-weight emotional thread. Ask: when did this start? Is this familiar? What do you want your therapist to know?"
         case .readBack:
-            "Phase: SUMMARIZE. Read back three themes and their emotional state. Confirm before generating brief."
+            "Phase: SUMMARIZE. Recap aloud what you gathered (threads, feelings, what matters for therapy) so they can add more or confirm it's enough; then confirm before generating the brief."
         case .closing:
             "Phase: CLOSE. Warmly end the session. Generate brief."
         }
@@ -843,7 +845,7 @@ Clean, dark surface. Two elements only:
 
 1. **The current agent text** — what the agent just said, displayed in New York Regular, `preludePrimary` color, centered, 2-3 lines maximum. It fades in word by word in sync with TTS playback. It does not appear instantly — it arrives as it is spoken.
 
-2. **The transcript scroll** — a small, low-opacity scrolling view showing the conversation in SF Mono. Barely visible. There for users who want it. Does not dominate the screen.
+2. **The transcript scroll** — a small, low-opacity scrolling view showing the conversation in SF Mono. Barely visible. There for users who want it. Does not dominate the screen. **Auto-scrolls** to keep the most recent line (including live partial STT) in view.
 
 Three buttons at the very bottom edge, always visible:
 - Pause (pause icon, minimal)

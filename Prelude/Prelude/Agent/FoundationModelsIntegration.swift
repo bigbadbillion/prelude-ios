@@ -358,6 +358,8 @@ enum PreludeFoundationModels {
         await MainActor.run { box.session = session }
 
         let phaseLabel = await MainActor.run { agent.currentPhase.rawValue }
+        let phase = await MainActor.run { agent.currentPhase }
+        let recapHint = await MainActor.run { agent.shouldSteerTowardSessionRecapInPrompt }
         let prompt = Prompt {
             "Current conversation phase: \(phaseLabel)."
             "User said: \(userUtterance)"
@@ -370,6 +372,16 @@ enum PreludeFoundationModels {
             that deepens reflection (prefer action askQuestion). Skip the question only for minimal greetings, \
             safety/crisis, or a clear closing/read-back check-in as appropriate for the phase.
             """
+            if recapHint {
+                """
+                Phase note — read-back / wrap-up: spokenResponse should **recap what you gathered** from the session (themes, feelings, what matters for therapy) \
+                in a short, natural paragraph, then **invite them to add more or confirm it's enough** before you close. Prefer action **readBackSummary** when that recap is the main move.
+                """
+            } else if phase == .closing {
+                """
+                Phase note — closing: warm, brief gratitude or encouragement; no new deep questions unless they are still adding something important.
+                """
+            }
         }
 
         func runOnce(includeTools: Bool) async throws -> AgentDecision {

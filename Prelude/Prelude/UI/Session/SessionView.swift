@@ -16,6 +16,7 @@ struct SessionView: View {
     @State private var didFinalize = false
     /// First agent line for this session (model, fallback, or script) — reused after mic “Try again”.
     @State private var sessionOpeningLine: String = VoiceEngineScript.lines[0]
+    @State private var transcriptScrollNonce: UInt = 0
 
     private var palette: PreludePalette { PreludePalette.palette(for: scheme) }
 
@@ -41,22 +42,35 @@ struct SessionView: View {
                             .foregroundStyle(palette.primary)
                             .multilineTextAlignment(.leading)
                             .animation(PreludeMotion.reveal, value: voice.agentText)
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(Array(voice.transcriptLines.enumerated()), id: \.offset) { _, line in
-                                    Text(line)
-                                        .font(PreludeTypeScale.transcript())
-                                        .foregroundStyle(palette.secondary.opacity(0.7))
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(Array(voice.transcriptLines.enumerated()), id: \.offset) { _, line in
+                                        Text(line)
+                                            .font(PreludeTypeScale.transcript())
+                                            .foregroundStyle(palette.secondary.opacity(0.7))
+                                    }
+                                    if !voice.liveTranscript.isEmpty {
+                                        Text(voice.liveTranscript)
+                                            .font(PreludeTypeScale.transcript())
+                                            .foregroundStyle(palette.tertiary.opacity(0.7))
+                                    }
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .id("transcriptBottom")
                                 }
-                                if !voice.liveTranscript.isEmpty {
-                                    Text(voice.liveTranscript)
-                                        .font(PreludeTypeScale.transcript())
-                                        .foregroundStyle(palette.tertiary.opacity(0.7))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(maxHeight: min(140, h * 0.18))
+                            .onChange(of: transcriptScrollNonce) { _, _ in
+                                Task { @MainActor in
+                                    await Task.yield()
+                                    withAnimation(.easeOut(duration: 0.25)) {
+                                        proxy.scrollTo("transcriptBottom", anchor: .bottom)
+                                    }
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxHeight: min(140, h * 0.18))
                     }
                     .padding(.horizontal, 24)
                     .frame(height: h * 0.28, alignment: .top)
@@ -127,7 +141,9 @@ struct SessionView: View {
                     guard let sid = sessionID else { return }
                     Task { await finalizeSession(sessionId: sid) }
                 },
-                onLiveTranscript: {},
+                onLiveTranscript: {
+                    transcriptScrollNonce &+= 1
+                },
                 onCrisis: {
                     appState.showCrisisResources = true
                 }

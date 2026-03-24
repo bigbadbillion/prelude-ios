@@ -326,6 +326,7 @@ final class VoiceEngine: ObservableObject {
         }
 
         transcriptLines.append(trimmed)
+        onLiveTranscriptScrollHint?()
         voiceState = .processing
         micSmoothed = 0
         amplitude = 0

@@ -116,6 +116,13 @@ final class AgentController: ObservableObject {
         }
     }
 
+    /// True when per-turn prompts should steer toward an audible **session recap** (readBack or the turn right before phase flips to readBack).
+    var shouldSteerTowardSessionRecapInPrompt: Bool {
+        if currentPhase == .readBack { return true }
+        if currentPhase == .excavation, modelTurnCount >= 5 { return true }
+        return false
+    }
+
     /// Maps free-model actions into **ConversationPhase** for SwiftData + UI (coarse; model also receives phase in prompt).
     func applyModelPhaseTransition(for action: AgentAction) {
         modelTurnCount += 1
@@ -158,7 +165,7 @@ enum VoiceEngineScript {
         "Take a moment to settle in. There's no hurry here. When you're ready — how are you coming into today?",
         "I hear that. When you say things have felt heavy — is there a particular moment this week that sits with you most?",
         "It sounds like there's a real weight in that. What emotion is underneath it, if you had to name one?",
-        "I want to reflect back a few things I heard: a sense of carrying something alone, some uncertainty about what comes next, and underneath it all — a quiet hope that things can shift. Does that feel close?",
-        "You've been generous in what you've shared today. I'll pull together your brief now. Take it into your session — it's yours.",
+        "Here's what I'm taking from our time: you've been carrying something heavy, there's real uncertainty about what comes next, and underneath it there's still a thread of hope that things could shift. Does that feel close — and is there anything else you want to add before we wrap, or does that feel like enough for today?",
+        "Thank you for sharing so honestly. I'll pull together your brief now — it's yours to take into your session.",
     ]
 }
