@@ -94,97 +94,6 @@ export const emotionColors: Record<EmotionLabel, string> = {
   grieving: '#7B8CAE',
 };
 
-// Mock data for demo
-function generateMockSessions(): Session[] {
-  const sessions: Session[] = [
-    {
-      id: '1',
-      startedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 + 9 * 60 * 1000).toISOString(),
-      durationSeconds: 540,
-      phase: 'closing',
-      dominantEmotion: 'anxious',
-      insights: [],
-      cards: [],
-      brief: {
-        id: 'b1',
-        sessionId: '1',
-        generatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        emotionalState: 'Tender and a little fragile',
-        themes: ['Work pressure', 'Family distance', 'Self-doubt'],
-        patientWords: "I keep feeling like I'm holding everything together but I'm about to drop it all.",
-        focusItems: [
-          'The argument with my manager last Tuesday',
-          'Why I cancel plans when I feel overwhelmed',
-          'Whether I actually want to stay in this role',
-        ],
-        patternNote: 'This is the third time you\'ve described feeling like "the responsible one" who can\'t ask for help.',
-      },
-    },
-    {
-      id: '2',
-      startedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      completedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000 + 11 * 60 * 1000).toISOString(),
-      durationSeconds: 660,
-      phase: 'closing',
-      dominantEmotion: 'hopeful',
-      insights: [],
-      cards: [],
-      brief: {
-        id: 'b2',
-        sessionId: '2',
-        generatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        emotionalState: 'Cautiously hopeful',
-        themes: ['New opportunities', 'Relationship patterns', 'Identity'],
-        patientWords: "I think I've been chasing what I thought I should want, not what I actually want.",
-        focusItems: [
-          'The decision about the new job offer',
-          'How I talk to myself when things go wrong',
-          'What "rest" actually means to me',
-        ],
-      },
-    },
-    {
-      id: '3',
-      startedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-      completedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000 + 8 * 60 * 1000).toISOString(),
-      durationSeconds: 480,
-      phase: 'closing',
-      dominantEmotion: 'sad',
-      insights: [],
-      cards: [],
-      brief: {
-        id: 'b3',
-        sessionId: '3',
-        generatedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-        emotionalState: 'Carrying a quiet sadness',
-        themes: ['Grief', 'Disconnection', 'Longing'],
-        patientWords: "I miss who I was before everything changed.",
-        focusItems: [
-          'My relationship with my father',
-          'The version of myself I feel I\'ve lost',
-          'Whether I\'m allowed to still be sad about this',
-        ],
-      },
-    },
-  ];
-  return sessions;
-}
-
-function generateMockWeeklyBrief(): WeeklyBrief {
-  return {
-    id: 'w1',
-    weekStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    summary:
-      "This week carried a familiar tension — the gap between how capable you appear to others and how precarious things feel from the inside. You returned, again, to the theme of carrying responsibility quietly, of being the one who keeps things together while quietly fraying at the edges.\n\nThere was also something new this week: a flicker of clarity about what you actually want, beneath the noise of what you think you should want. That\'s worth sitting with.\n\nYour emotional range moved from anxious at the start of the week to something closer to resolve by the end — not peace, but groundedness.",
-    themes: ['Responsibility and burden', 'Authentic desire', 'Emotional self-concealment'],
-    dominantEmotion: 'anxious',
-    suggestions: ['What would it look like to ask for help from one specific person this week?'],
-    sessionIds: ['1'],
-    generatedAt: new Date().toISOString(),
-  };
-}
-
 interface AppContextValue {
   sessions: Session[];
   weeklyBrief: WeeklyBrief | null;
@@ -232,18 +141,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (storedSessions) {
         setSessions(JSON.parse(storedSessions));
       } else {
-        // Seed with mock data for demo
-        const mock = generateMockSessions();
-        setSessions(mock);
-        await AsyncStorage.setItem(STORAGE_KEYS.sessions, JSON.stringify(mock));
+        setSessions([]);
       }
 
       if (storedWeekly) {
         setWeeklyBrief(JSON.parse(storedWeekly));
       } else {
-        const mock = generateMockWeeklyBrief();
-        setWeeklyBrief(mock);
-        await AsyncStorage.setItem(STORAGE_KEYS.weeklyBrief, JSON.stringify(mock));
+        setWeeklyBrief(null);
       }
 
       if (storedName) setUserNameState(storedName);

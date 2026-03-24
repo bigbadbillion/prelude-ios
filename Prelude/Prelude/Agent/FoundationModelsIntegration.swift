@@ -77,11 +77,19 @@ enum PreludeFoundationToolFactory {
 
 @MainActor
 enum PreludeFMToolRunner {
-    static func saveInsight(box: PreludeToolContextBox, text: String) async throws -> String {
+    static func saveInsight(box: PreludeToolContextBox, text: String, emotionLabel: String) async throws -> String {
         let ctx = ToolExecutionContext(modelContext: box.modelContext, session: box.session)
-        try await SaveInsightTool(capturedText: text).execute(ctx)
+        let emotion = resolvedEmotionForInsight(text: text, rawLabel: emotionLabel)
+        try await SaveInsightTool(capturedText: text, emotion: emotion).execute(ctx)
         try? box.modelContext.save()
         return "Insight saved for the brief."
+    }
+
+    /// Parses model label; falls back to substring match in insight text (same idea as brief inference).
+    private static func resolvedEmotionForInsight(text: String, rawLabel: String) -> EmotionLabel {
+        let t = rawLabel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if let e = EmotionLabel(rawValue: t) { return e }
+        return EmotionLabel.firstMentioned(in: text) ?? .neutral
     }
 
     static func tagEmotion(box: PreludeToolContextBox, label: String) async throws -> String {
@@ -126,10 +134,22 @@ struct SaveInsightFMTool: Tool {
     struct Arguments {
         @Guide(description: "One or two sentences capturing the insight")
         var text: String
+
+        @Guide(
+            description: """
+                Emotion this insight carries: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving. \
+                Prefer a **specific** label; use neutral only if the note is emotionally flat. Omit only if unsure (host will infer from text).
+                """
+        )
+        var emotionLabel: String?
     }
 
     func call(arguments: Arguments) async throws -> String {
-        try await PreludeFMToolRunner.saveInsight(box: box, text: arguments.text)
+        try await PreludeFMToolRunner.saveInsight(
+            box: box,
+            text: arguments.text,
+            emotionLabel: arguments.emotionLabel ?? ""
+        )
     }
 }
 

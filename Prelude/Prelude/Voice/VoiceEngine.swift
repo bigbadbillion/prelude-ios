@@ -5,6 +5,11 @@ import Speech
 
 private final class TTSDelegateBox: NSObject, AVSpeechSynthesizerDelegate {
     var onFinish: (() -> Void)?
+    var onWillSpeakRange: ((NSRange, AVSpeechUtterance) -> Void)?
+
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, willSpeakRangeOfSpeechString characterRange: NSRange, utterance: AVSpeechUtterance) {
+        onWillSpeakRange?(characterRange, utterance)
+    }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         onFinish?()
@@ -42,6 +47,12 @@ final class VoiceEngine: ObservableObject {
     private var scriptResponseIndex = 1
     private var isPaused = false
 
+    /// Smoothed mic level (~PRD §10.5 — avoid twitchy motion).
+    private var micSmoothed: Double = 0
+    /// Envelope driven by `willSpeakRangeOfSpeechString` + decay while agent TTS runs.
+    private var agentSpeechEnvelope: Double = 0
+    private var ttsDecayTimer: Timer?
+
     /// Opening line is index 0; responses start at 1 (matches Expo `session.tsx`).
     private static var agentScript: [String] { VoiceEngineScript.lines }
 
@@ -51,12 +62,81 @@ final class VoiceEngine: ObservableObject {
                 await self?.agentDidFinishSpeaking()
             }
         }
+        ttsDelegate.onWillSpeakRange = { [weak self] range, utterance in
+            Task { @MainActor in
+                self?.applyAgentSpeechBurst(range: range, utterance: utterance)
+            }
+        }
         synthesizer.delegate = ttsDelegate
         speech.onAmplitude = { [weak self] v in
             Task { @MainActor in
-                self?.amplitude = v
+                self?.applyMicAmplitude(v)
             }
         }
+    }
+
+    deinit {
+        ttsDecayTimer?.invalidate()
+    }
+
+    private func invalidateTTSTimer() {
+        ttsDecayTimer?.invalidate()
+        ttsDecayTimer = nil
+    }
+
+    /// EMA toward raw mic level while listening (PRD §10.5 — averaged feel).
+    private func applyMicAmplitude(_ raw: Double) {
+        guard voiceState == .listening else { return }
+        let alpha = 0.22
+        micSmoothed = micSmoothed * (1 - alpha) + raw * alpha
+        amplitude = micSmoothed
+    }
+
+    private func applyAgentSpeechBurst(range: NSRange, utterance: AVSpeechUtterance) {
+        guard voiceState == .speaking else { return }
+        let len = max(1, range.length)
+        let boost = min(1, 0.18 + Double(len) * 0.038)
+        agentSpeechEnvelope = min(1, agentSpeechEnvelope + boost)
+        amplitude = agentSpeechEnvelope
+        ensureTTSDecayTimer()
+    }
+
+    private func ensureTTSDecayTimer() {
+        guard ttsDecayTimer == nil || !(ttsDecayTimer?.isValid ?? false) else { return }
+        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.tickAgentSpeechDecay()
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        ttsDecayTimer = timer
+    }
+
+    private func tickAgentSpeechDecay() {
+        guard voiceState == .speaking, synthesizer.isSpeaking else {
+            invalidateTTSTimer()
+            return
+        }
+        agentSpeechEnvelope *= 0.87
+        if agentSpeechEnvelope < 0.018 {
+            agentSpeechEnvelope = 0
+        }
+        amplitude = agentSpeechEnvelope
+    }
+
+    private func resetPresenceLevelsForSpeaking() {
+        invalidateTTSTimer()
+        micSmoothed = 0
+        agentSpeechEnvelope = 0.1
+        amplitude = agentSpeechEnvelope
+        ensureTTSDecayTimer()
+    }
+
+    private func resetPresenceLevelsAfterSpeaking() {
+        invalidateTTSTimer()
+        agentSpeechEnvelope = 0
+        amplitude = 0
+        micSmoothed = 0
     }
 
     func configure(
@@ -99,30 +179,38 @@ final class VoiceEngine: ObservableObject {
         synthesizer.pauseSpeaking(at: .word)
         voiceState = .paused
         cancelSilenceTimer()
+        invalidateTTSTimer()
     }
 
     func resume() {
         isPaused = false
         if synthesizer.isSpeaking {
             synthesizer.continueSpeaking()
+            voiceState = .speaking
+            ensureTTSDecayTimer()
         } else {
             Task { await beginListening() }
+            voiceState = .listening
         }
-        voiceState = .listening
     }
 
     func end() {
         cancelSilenceTimer()
+        invalidateTTSTimer()
         speech.stopCapturing()
         synthesizer.stopSpeaking(at: .immediate)
         voiceState = .ended
         errorMessage = nil
         liveTranscript = ""
+        agentSpeechEnvelope = 0
+        amplitude = 0
+        micSmoothed = 0
     }
 
     private func speak(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        resetPresenceLevelsForSpeaking()
         let u = AVSpeechUtterance(string: trimmed)
         PreludeTTS.configure(u)
         synthesizer.speak(u)
@@ -131,6 +219,7 @@ final class VoiceEngine: ObservableObject {
     private func agentDidFinishSpeaking() async {
         guard !isPaused else { return }
         if voiceState == .ended { return }
+        resetPresenceLevelsAfterSpeaking()
         if endSessionAfterThisUtterance {
             endSessionAfterThisUtterance = false
             end()
@@ -176,6 +265,8 @@ final class VoiceEngine: ObservableObject {
         voiceState = .listening
         liveTranscript = ""
         cancelSilenceTimer()
+        micSmoothed = 0
+        amplitude = 0
 
         do {
             try speech.startCapturing { [weak self] text, isFinal in
@@ -236,6 +327,8 @@ final class VoiceEngine: ObservableObject {
 
         transcriptLines.append(trimmed)
         voiceState = .processing
+        micSmoothed = 0
+        amplitude = 0
 
         if CrisisDetection.indicatesCrisis(trimmed) {
             onCrisis?()

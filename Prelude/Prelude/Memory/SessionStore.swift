@@ -42,4 +42,16 @@ enum SessionStore {
         let cb = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: b)
         return ca.yearForWeekOfYear == cb.yearForWeekOfYear && ca.weekOfYear == cb.weekOfYear
     }
+
+    /// Sessions referenced by a weekly brief’s `sessionIds`, completed with a dominant emotion tag, oldest→newest, max six (Expo weekly emotional arc).
+    @MainActor
+    static func sessionsForWeeklyEmotionalArc(sessionIds idStrings: [String], in modelContext: ModelContext) -> [Session] {
+        let resolved: [Session] = idStrings.compactMap { UUID(uuidString: $0) }.compactMap { session(id: $0, in: modelContext) }
+        let eligible = resolved.filter { s in
+            guard s.completedAt != nil else { return false }
+            return s.dominantEmotion != nil || s.brief != nil
+        }
+        let sorted = eligible.sorted { ($0.completedAt!) < ($1.completedAt!) }
+        return Array(sorted.suffix(6))
+    }
 }

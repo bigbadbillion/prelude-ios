@@ -11,6 +11,8 @@ final class AppState {
     /// After session completes, present brief for this session id (sheet).
     var sessionBriefToPresent: UUID?
     var showCrisisResources: Bool = false
+    /// Bumped after `MemoryStore.clearAllLocalData` so `RootView` can re-show onboarding when defaults were cleared.
+    var localDataResetCount: Int = 0
 
     func refreshAvailability() {
         availability = PreludeModelAvailability.resolve()

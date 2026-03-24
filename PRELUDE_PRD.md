@@ -13,8 +13,8 @@
 | Platform | iOS 26+ / iPhone with Apple Intelligence |
 | Minimum Device | iPhone 15 Pro (A17 Pro) |
 | AI Runtime | Foundation Models (on-device, zero API cost) |
-| Last Updated | March 21, 2026 |
-| Build Status | 🟡 In Progress — Phase 4 memory / briefs shipped; polish in Phase 5 |
+| Last Updated | March 23, 2026 |
+| Build Status | 🟡 In Progress — Phase 5 polish (presence + accessibility + App Store) |
 
 ---
 
@@ -35,14 +35,14 @@
 - [x] PRD saved to workspace
 - [x] Expo artifact created (`artifacts/prelude`)
 - [x] Design system / color tokens defined
-- [x] Home Screen
+- [x] Home Screen — last brief card, **emerging pattern** (streak or recurring theme via `PatternDetector`), **recent check-ins** (up to 2 sessions: dominant emotion or brief tone) — **Files:** Prelude/Prelude/UI/Home/HomeView.swift, Prelude/Prelude/Memory/PatternDetector.swift
 - [x] Session Screen (with breathing presence shape)
 - [x] Brief Screen (session cards)
 - [x] History Screen
-- [x] Weekly Brief Screen
+- [x] Weekly Brief Screen — **Files:** Prelude/Prelude/UI/Weekly/WeeklyBriefView.swift, Prelude/Prelude/UI/Weekly/EmotionalArcChartView.swift, Prelude/Prelude/Memory/SessionStore.swift
 - [x] Settings Screen (disclaimer, crisis resource)
 - [x] Tab navigation (NativeTabs with liquid glass)
-- [x] Onboarding / Availability States screen
+- [x] Onboarding / Availability States screen — first-launch disclaimer dismisses to **Home** (session only via Begin reflection) — **Files:** Prelude/Prelude/UI/Root/RootView.swift, Prelude/Prelude/UI/Onboarding/OnboardingView.swift
 
 ### Phase 2 — Voice System ✅
 - [x] STT — Web Speech API on web; native-ready architecture (useVoiceEngine hook)
@@ -69,16 +69,16 @@
 
 ### Phase 4 — Memory & Persistence ✅
 - [x] SwiftData schema (Session, Insight, SessionCard, SessionBrief, WeeklyBrief, EmotionalArc) — **Files:** Prelude/Prelude/Models/SwiftDataModels.swift
-- [x] MemoryStore / SessionStore / InsightStore / BriefStore — **Files:** Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/Memory/SessionStore.swift, Prelude/Prelude/Memory/InsightStore.swift, Prelude/Prelude/Memory/BriefStore.swift
+- [x] MemoryStore / SessionStore / InsightStore / BriefStore — **Files:** Prelude/Prelude/Memory/MemoryStore.swift (no mock seed), Prelude/Prelude/Memory/SessionStore.swift, Prelude/Prelude/Memory/InsightStore.swift, Prelude/Prelude/Memory/BriefStore.swift, Prelude/scripts/reset_prelude_data.sh (simulator data wipe)
 - [x] PatternDetector (cross-session theme analysis; consecutive-session streak for pattern card) — **Files:** Prelude/Prelude/Memory/PatternDetector.swift, Prelude/Prelude/Tools/CheckPatternsTool.swift
 - [x] Weekly brief generation (2+ sessions in calendar week gate; on-device FM + template fallback) — **Files:** Prelude/Prelude/Memory/BriefStore.swift, Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift, Prelude/Prelude/UI/Root/RootView.swift
-- [x] Session brief synthesis (insights/cards; not raw transcript; FM + fallback) — **Files:** Prelude/Prelude/Memory/BriefStore.swift, Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift, Prelude/Prelude/Tools/SummarizeSessionTool.swift, Prelude/Prelude/UI/Session/SessionView.swift
+- [x] Session brief synthesis (dedicated brief agent + sanitizer; only “what I need to say” in user voice; FM + fallback; delete brief from detail) — **Files:** Prelude/Prelude/Memory/BriefStore.swift, Prelude/Prelude/Memory/BriefGenerationDraft.swift, Prelude/Prelude/Memory/BriefDraftSanitizer.swift, Prelude/Prelude/Memory/BriefPatientWordsNormalizer.swift, Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift, Prelude/Prelude/Agent/PreludeBriefAgent.swift, Prelude/Prelude/Tools/SummarizeSessionTool.swift, Prelude/Prelude/UI/Session/SessionView.swift, Prelude/Prelude/UI/Brief/BriefDetailView.swift, Prelude/Prelude/Memory/MemoryStore.swift
 
 ### Phase 5 — Availability & Polish 🟡
 - [x] ModelAvailabilityState guard pattern on every session start — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Home/HomeView.swift
 - [x] User-facing availability states (warm copy, not error messages) — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/UI/Onboarding/OnboardingView.swift
-- [x] Settings — Apple Intelligence / on-device model status, diagnostics line, Refresh — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift
-- [ ] Reduce Motion accessibility support
+- [x] Settings — Apple Intelligence / on-device model status, diagnostics line, Refresh, Danger “clear all data” — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/App/UserSettings.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Root/RootView.swift, Prelude/Prelude/App/PreludeHaptics.swift
+- [x] Presence — ambient breath + dual reactivity (mic smoothing while listening; TTS `willSpeakRange` envelope while agent speaks; prelude-ios §10.5) — **Files:** Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/PresenceShapeView.swift
 - [ ] Dynamic Type support
 - [ ] VoiceOver labels on custom shapes
 - [ ] App Store privacy manifest
@@ -192,7 +192,19 @@ During session, agent calls `saveInsight()` silently when it detects emotionally
 **Insight dimensions:** Theme, Emotion, Concern, Goal, Conflict
 
 ### F4 — Session Brief
-Generated after every session. **Dedicated brief agent:** a separate on-device **`LanguageModelSession`** from the live coach, with its own **`setBriefSection`** tool, fills the brief from **`Session.userTranscriptLog`** plus insights/cards. **weighing_on_me** (shown as WEIGHING ON ME) should be a **near-verbatim** excerpt from USER SPOKE; other sections (**emotional_state**, **key_emotion**, **what_to_say**, threads, goals) are **inferred** in warm first person from what the conversation implies — not a full transcript paste. **`emotional_read`** stores a short **affective analysis** of the generated brief (tone, not diagnosis), shown as “How this brief reads.” Fallback: single-shot structured generation, then card/insight assembly. Five to seven structured cards covering:
+Generated after every session. **Dedicated brief agent:** a separate on-device **`LanguageModelSession`** from the live coach with **exactly one tool — `setBriefSection`** (one call per card field). It fills the brief from **`Session.userTranscriptLog`** plus saved insights/cards.
+
+**Voice / synthesis rules (product + enforcement):**
+- **Only `what_to_say`** (persisted as `SessionBrief.patientWords`, UI: **WHAT I NEED TO SAY**) should read like the user’s **own line to speak** — one **distilled** first-person carry sentence (about two short sentences max, ~280 characters). **`BriefPatientWordsNormalizer`** caps length and strips full-transcript dumps.
+- **All other sections are synthesized therapy-prep copy** — warm first person where natural, but **not** sentences copied from USER SPOKE. That includes **weighing_on_me** (WEIGHING ON ME): a **short summary of the emotional weight**, not a verbatim quote. Cards should **not** repeat the same idea across fields.
+- **`pattern_note`**: only when a **cross-session pattern** from **`PatternDetector`** clearly fits this session; otherwise omit. Never paste transcript lines into the pattern card.
+- **`emotional_read`**: short **affective read** of the brief the model wrote (tone, tension, hope — not diagnosis), UI: “How this brief reads.”
+
+**Post-processing:** **`BriefDraftSanitizer`** detects transcript-shaped text in non–`what_to_say` fields (substring / turn overlap, length caps) and clears or clamps so the brief stays scannable. Applied in the tool path, draft mapping, one-shot FM fallback, and related **`BriefStore`** assembly.
+
+**Concurrency:** **`PreludeBriefAgent.run`** is **`nonisolated`** so **`respond`** does not execute on the main actor while tools use **`MainActor.run`** to write the **`BriefGenerationDraft`** — avoids the same SwiftData deadlock class as the live session agent.
+
+**Fallback order:** brief agent → single-shot **`GenerableSessionBriefOut`** (same voice rules in instructions) → card/insight template assembly. **Five to seven structured cards** covering:
 1. How I showed up today (emotional state)
 2. The thing that's really weighing on me
 3. Key emotion underneath it
@@ -498,13 +510,13 @@ preludeTranscript: SF Mono 14pt Regular (0.7 opacity)
 ### 10.5 Session Screen
 
 **Zone 1 — The Presence (top 60%)**
-A large, breathing organic shape. Not a circle, not an orb. A soft, irregular form.
+A large, breathing organic shape. Not a circle, not an orb. A soft, irregular form (layered continuous rects + `TimelineView` ambient breath + drift; full ink-drop `Canvas` path is optional polish).
 
 Behavior:
 - Idle/Listening: slow breath (~4s), preludeCalm, 0.15 opacity
-- User speaking: responds to amplitude, breathes faster/more expansively, tints toward preludeActive
+- User speaking: responds to amplitude (mic RMS, EMA-smoothed in `VoiceEngine`), breathes faster/more expansively, tints toward preludeActive
 - Processing: contracts gently, holds still, preludeProcessing. **No spinner. No "thinking…" text.**
-- Agent speaking: expands slowly, holds fuller form, preludeCalm, soft pulse
+- Agent speaking: expands slowly, holds fuller form, preludeCalm, soft pulse from TTS `willSpeakRangeOfSpeechString` bursts + decay (`AVSpeechSynthesizer` has no public output-level tap)
 
 **Zone 2 — The Ground (bottom 40%)**
 - Agent's current text: New York Regular, fades in word-by-word with TTS
@@ -554,7 +566,7 @@ error:           short soft single — never harsh
 **Brief Screen**
 - Stacked Liquid Glass cards, swipeable
 - Each card: SF Symbol amber icon + SF Pro caption label + New York body
-- User's own preserved words: New York Italic, thin amber left border
+- **User-voice emphasis (amber left border)** applies **only** to **WHAT I NEED TO SAY** (`patientWords` / `what_to_say`). Other cards use standard body styling — they are synthesized prep lines, not transcript excerpts.
 - Bottom: "Take this to your session" — copies brief as plain text
 
 **History Screen**
@@ -563,15 +575,19 @@ error:           short soft single — never harsh
 - No charts (emotional trends are in Weekly Brief only)
 
 **Weekly Brief Screen**
-- Full-width card, New York Semibold: "This week."
+- Subtitle: "Week of {date}" from the brief’s `weekStart`
+- Emotional arc card (above narrative): dominant emotion per session from `WeeklyBrief.sessionIds`, smooth curve (Catmull–Rom), gradient fill and point labels; "heavier" / "lighter" axis; hidden if fewer than two tagged sessions; chart container matches Expo `rgba` tint (not Liquid Glass); line/fill use latest-point emotion color at Expo opacities; if `dominantEmotion` is missing or `.neutral`, infer a label from that session’s brief (`emotionalState`, `affectiveAnalysis`, themes) when prose names another `EmotionLabel`
+- Recurring themes pill row: themed tags from `weeklyBrief.themes` (amber outlines)
+- Full-width narrative card: Expo `mainCard` — solid `colors.surface` + border (not Liquid Glass), New York Semibold: "This week."
 - Three paragraphs of narrative prose (not bullets)
 - "Worth bringing up:" section in amber
+- Regenerate button at the bottom: triggers `refreshWeeklyBriefIfNeeded` for the current week
 
 ### 10.10 Accessibility
 - Dynamic Type on all text
 - Minimum 44×44pt tap targets
 - VoiceOver labels on all custom shapes
-- Reduce Motion: breathing shape → simple static ring with fade transitions
+- Reduce Motion: slower, shallower ambient breath — presence remains expressive (product: no flat static ring); optional further dampening elsewhere as needed
 - High Contrast: stronger tint overlay on Liquid Glass surfaces
 - 988 crisis link always VoiceOver accessible
 
@@ -587,7 +603,8 @@ Prelude/
 ├── Agent/
 │   ├── AgentController.swift     — LanguageModelSession lifecycle, agent loop
 │   ├── PreludeAgentPrompts.swift — phase-sensitive prompts + Foundation `Instructions`
-│   ├── FoundationModelsIntegration.swift — @Generable decision, Tool adapters, model turn
+│   ├── FoundationModelsIntegration.swift — @Generable decision, live-session Tool adapters, model turn (off MainActor for `respond`)
+│   ├── PreludeBriefAgent.swift   — session-brief LanguageModelSession + `setBriefSection` tool only
 │   ├── AgentDecision.swift       — @Generable AgentDecision struct
 │   └── ConversationPhase.swift   — phase enum and transition logic
 ├── Tools/
@@ -609,6 +626,10 @@ Prelude/
 │   ├── SessionStore.swift
 │   ├── InsightStore.swift
 │   ├── BriefStore.swift
+│   ├── BriefGenerationDraft.swift   — in-memory sections before SessionBrief insert
+│   ├── BriefDraftSanitizer.swift    — anti–transcript-paste + caps for non–what_to_say fields
+│   ├── BriefPatientWordsNormalizer.swift — cap / excerpt for what_to_say only
+│   ├── PreludeBriefFoundationModels.swift — one-shot session/weekly @Generable fallback
 │   └── PatternDetector.swift
 ├── Models/
 │   ├── Session.swift
@@ -635,7 +656,8 @@ Prelude/
     │   ├── HistoryView.swift
     │   └── SessionRow.swift
     ├── Weekly/
-    │   └── WeeklyBriefView.swift
+    │   ├── WeeklyBriefView.swift
+    │   └── EmotionalArcChartView.swift
     └── Settings/
         └── SettingsView.swift
 ```
@@ -650,7 +672,7 @@ Prelude/
 | Phase 2 | Voice System — STT, TTS, amplitude, turn-taking | ✅ Done |
 | Phase 3 | Agent System — LanguageModelSession, tools, prompts | ✅ Done |
 | Phase 4 | Memory & Persistence — SwiftData, stores, patterns, weekly + session briefs | ✅ Done |
-| Phase 5 | Availability, accessibility, App Store compliance | 🟡 In Progress (availability + Settings AI indicator; manifest partial) |
+| Phase 5 | Availability, accessibility, App Store compliance | 🟡 In Progress (availability + Settings + presence reactivity; Dynamic Type / VoiceOver / privacy manifest remain) |
 
 ---
 
@@ -698,7 +720,7 @@ Prelude/
 
 6. **Deployment target** — `@Generable` / macro-generated code required **`IPHONEOS_DEPLOYMENT_TARGET = 26.0`** for this project (see `project.pbxproj` / `generate_xcode_project.py`).
 
-7. **Tool execution on the main actor** — SwiftData + `ModelContext` in tool bodies: use a **`@MainActor`** helper (`PreludeFMToolRunner`) from `Tool.call(arguments:)` rather than incorrect `MainActor.run` overloads.
+7. **Tool execution vs. where `respond` runs** — SwiftData + `ModelContext` (and **`BriefGenerationDraft`**) must be touched on the **main actor** (`PreludeFMToolRunner`, **`MainActor.run`** in **`SetBriefSectionFMTool`**). If **`LanguageModelSession.respond`** is invoked from **`@MainActor`** while it blocks waiting on the model, tool handlers that need the main queue can **deadlock**. **Mitigation:** **`PreludeFoundationModels.runTurn` / `runOpening`** and **`PreludeBriefAgent.run`** are **`nonisolated`** so **`respond`** runs on the generic executor; only short **`MainActor.run`** blocks mutate SwiftData or the draft.
 
 8. **Naming** — Renamed app prompts to **`PreludeAgentPrompts`** to avoid clashing with **FoundationModels’** `PromptBuilder` / `Prompt` DSL.
 
@@ -715,5 +737,5 @@ Prelude/
 | Voice / session UI | `Prelude/Prelude/Voice/VoiceEngine.swift`, `Prelude/Prelude/UI/Session/SessionView.swift` |
 | Settings indicator | `Prelude/Prelude/UI/Settings/SettingsView.swift` |
 | Tools + context | `Prelude/Prelude/Tools/*.swift` (esp. Save/Tag/Generate/GetPast + `ToolExecutionContext.swift`) |
-| Brief synthesis (session + weekly) | `Prelude/Prelude/Memory/BriefStore.swift`, `Prelude/Prelude/Memory/BriefGenerationDraft.swift`, `Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift`, `Prelude/Prelude/Agent/PreludeBriefAgent.swift`, `Prelude/Prelude/Memory/PatternDetector.swift`, `Prelude/Prelude/Memory/SessionStore.swift`, `Prelude/Prelude/Memory/InsightStore.swift` |
+| Brief synthesis (session + weekly) | `Prelude/Prelude/Memory/BriefStore.swift` (heuristic dominant fallback if tag still weak), `Prelude/Prelude/Memory/BriefGenerationDraft.swift`, `Prelude/Prelude/Memory/BriefDraftSanitizer.swift`, `Prelude/Prelude/Memory/BriefPatientWordsNormalizer.swift`, `Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift` (+ optional `dominantEmotionKey` one-shot), `Prelude/Prelude/Agent/PreludeBriefAgent.swift` (structured ack `dominantEmotionKey` → `Session.dominantEmotion`), `Prelude/Prelude/Models/EmotionLabel.swift` (`parseCanonicalKey`), `Prelude/Prelude/Memory/PatternDetector.swift`, `Prelude/Prelude/Memory/SessionStore.swift`, `Prelude/Prelude/Memory/InsightStore.swift`, `Prelude/Prelude/UI/Brief/BriefDetailView.swift`, `Prelude/Prelude/UI/Weekly/WeeklyBriefView.swift`, `Prelude/Prelude/UI/Weekly/EmotionalArcChartView.swift` (arc plot omits neutral-resolved points) |
 | Project / docs | `Prelude/Prelude.xcodeproj/project.pbxproj`, `Prelude/scripts/generate_xcode_project.py`, `Prelude/README.md`, `.cursor/rules/prelude-prd-tracker.mdc` |

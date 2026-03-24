@@ -91,6 +91,21 @@ enum PatternDetector {
         return "The theme “\(display)” has shown up in several reflections in a row — worth naming with your therapist."
     }
 
+    /// Softer signal when no 3-session streak: a theme appearing in **2+** of the most recent completed sessions (insights + brief themes).
+    static func recurringThemeHintAmongRecent(completedNewestFirst: [Session], maxSessions: Int = 6) -> String? {
+        let slice = Array(completedNewestFirst.prefix(maxSessions))
+        guard slice.count >= 2 else { return nil }
+        var counts: [String: Int] = [:]
+        for s in slice {
+            for t in themeStrings(from: s, includeBriefThemes: true) {
+                counts[t, default: 0] += 1
+            }
+        }
+        guard let best = counts.max(by: { $0.value < $1.value }), best.value >= 2 else { return nil }
+        let display = best.key.prefix(1).uppercased() + best.key.dropFirst()
+        return "“\(display)” has surfaced in multiple recent reflections — worth watching between sessions."
+    }
+
     /// Human-readable summary for tools / debugging.
     static func summaryLines(from sessions: [Session], focusSessionId: UUID?) -> String {
         let themes: [String]

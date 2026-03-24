@@ -50,4 +50,5 @@ Thumbs.db
 
 # Native Prelude Xcode
 Prelude/build/
+Prelude/.derivedData/
 *.xcuserstate

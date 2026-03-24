@@ -6,15 +6,19 @@ struct BriefDetailView: View {
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppState.self) private var appState
 
     @State private var session: Session?
+    @State private var showDeleteConfirm = false
+    @State private var deleteFailed = false
 
     private var palette: PreludePalette { PreludePalette.palette(for: scheme) }
 
     var body: some View {
         Group {
             if let session, let brief = session.brief {
-                content(session: session, brief: brief)
+                briefScrollView(session: session, brief: brief)
             } else {
                 Text("Brief not found")
                     .font(PreludeTypeScale.cardBody())
@@ -23,12 +27,29 @@ struct BriefDetailView: View {
             }
         }
         .background(palette.depth.ignoresSafeArea())
-        .task { await load() }
+        .task(id: sessionId) { await load() }
         .onAppear { PreludeHaptics.briefReady() }
+        .confirmationDialog(
+            "Delete this brief?",
+            isPresented: $showDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                deleteBriefTapped()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes the session from your history, including the brief and related notes. Weekly summaries will drop this session from their chart if it was listed.")
+        }
+        .alert("Couldn’t delete", isPresented: $deleteFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Try again. If the problem continues, restart the app.")
+        }
     }
 
     @ViewBuilder
-    private func content(session: Session, brief: SessionBrief) -> some View {
+    private func briefScrollView(session: Session, brief: SessionBrief) -> some View {
         let cards = buildCards(from: brief)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -57,9 +78,38 @@ struct BriefDetailView: View {
                         .padding(.vertical, 24)
                 }
                 .accessibilityLabel("Take this to your session — shares brief as text")
+
+                Button {
+                    showDeleteConfirm = true
+                } label: {
+                    Text("Delete this brief")
+                        .font(PreludeTypeScale.label())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.red.opacity(0.9))
+                .accessibilityHint("Removes this session and its brief from your device")
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 40)
+        }
+    }
+
+    private func deleteBriefTapped() {
+        do {
+            try MemoryStore.deleteSessionAndPruneWeekly(sessionId: sessionId, modelContext: context)
+            showDeleteConfirm = false
+            // Drop SwiftData references before dismiss so no render pass touches deleted objects.
+            session = nil
+            if appState.sessionBriefToPresent == sessionId {
+                appState.sessionBriefToPresent = nil
+            }
+            DispatchQueue.main.async {
+                dismiss()
+            }
+        } catch {
+            deleteFailed = true
         }
     }
 

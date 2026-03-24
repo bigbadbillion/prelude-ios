@@ -26,6 +26,21 @@ enum PreludeColors {
     static func border(for scheme: ColorScheme) -> Color {
         scheme == .dark ? Color.white.opacity(0.07) : Color.black.opacity(0.08)
     }
+
+    // MARK: - Expo `weekly.tsx` (artifacts/prelude/app/(tabs)/weekly.tsx)
+
+    /// Chart card `backgroundColor` (not `mainCard` surface).
+    static func weeklyChartCardFill(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.025)
+            : Color(red: 26 / 255, green: 22 / 255, blue: 18 / 255).opacity(0.03)
+    }
+
+    /// Date labels under points: `PreludeColors.secondary.dark/light` at opacity `0.7` in Expo SVG.
+    static func weeklyChartDateLabel(for scheme: ColorScheme) -> Color {
+        let base = scheme == .dark ? secondaryDark : secondaryLight
+        return base.opacity(0.7)
+    }
 }
 
 struct PreludePalette {

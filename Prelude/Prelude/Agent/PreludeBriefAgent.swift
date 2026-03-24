@@ -95,6 +95,15 @@ struct SetBriefSectionFMTool: Tool {
 struct GenerableBriefAgentAck {
     @Guide(description: "The word 'done' after all intended setBriefSection calls are complete.")
     var status: String
+
+    /// Canonical session label — structured output avoids inferring from prose. Optional so a bad generation doesn’t fail the whole completion.
+    @Guide(
+        description: """
+            Lowercase token only: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving — \
+            dominant tone for the **whole** reflection after reading USER SPOKE. Omit if you cannot choose one.
+            """
+    )
+    var dominantEmotionKey: String?
 }
 
 // MARK: - Brief agent run loop
@@ -123,7 +132,7 @@ enum PreludeBriefAgent {
 
         **De-duplication**: Each section must add **distinct** information. Do not restate the same idea across cards.
 
-        Do not invent crises or severe symptoms they did not imply. Use **setBriefSection** once per section, then structured status **done**.
+        Do not invent crises or severe symptoms they did not imply. Use **setBriefSection** once per section, then the structured completion (status **done** plus any schema fields).
         """
 
     @available(iOS 26.0, *)
@@ -162,17 +171,23 @@ enum PreludeBriefAgent {
             Call setBriefSection for: emotional_state, weighing_on_me, key_emotion, what_to_say, \
             unresolved_thread, therapy_goal, emotional_read. \
             Optional: secondary_theme (only if distinct), pattern_note (only if cross-session pattern fits). \
-            Then respond with status 'done'.
+            Then structured completion: status 'done'; set dominantEmotionKey when you can (schema).
             """
         }
 
         do {
-            _ = try await sessionLM.respond(
+            let response = try await sessionLM.respond(
                 to: prompt,
                 generating: GenerableBriefAgentAck.self,
                 includeSchemaInPrompt: true
             )
-            return await MainActor.run { draft.hasMinimumContent }
+            let ack = response.content
+            return await MainActor.run {
+                if let raw = ack.dominantEmotionKey, let label = EmotionLabel.parseCanonicalKey(raw) {
+                    session.dominantEmotion = label
+                }
+                return draft.hasMinimumContent
+            }
         } catch {
             let ns = error as NSError
             PreludeBriefAgentLog.logger.error("Brief agent failed: \(error.localizedDescription) domain=\(ns.domain) code=\(ns.code)")

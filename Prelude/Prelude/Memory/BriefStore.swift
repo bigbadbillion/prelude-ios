@@ -119,6 +119,9 @@ enum BriefStore {
                     if !pn.isEmpty {
                         resolvedPattern = pn
                     }
+                    if let raw = out.dominantEmotionKey, let label = EmotionLabel.parseCanonicalKey(raw) {
+                        session.dominantEmotion = label
+                    }
                 }
             }
             #endif
@@ -164,6 +167,31 @@ enum BriefStore {
         )
         modelContext.insert(brief)
         session.brief = brief
+        refineDominantEmotionIfWeak(session: session, brief: brief)
+    }
+
+    /// Fallback when structured brief output (or live tag) did not set a **non-neutral** dominant: substring heuristic on brief text, then insight vote.
+    private static func refineDominantEmotionIfWeak(session: Session, brief: SessionBrief) {
+        let tag = session.dominantEmotion
+        guard tag == nil || tag == .neutral else { return }
+
+        let corpus = [
+            brief.emotionalState,
+            brief.affectiveAnalysis,
+            brief.themes.joined(separator: " "),
+            brief.focusItems.joined(separator: " "),
+        ].joined(separator: "\n")
+        if let inferred = EmotionLabel.firstMentioned(in: corpus), inferred != .neutral {
+            session.dominantEmotion = inferred
+            return
+        }
+
+        let votes = session.insights.map(\.emotion).filter { $0 != .neutral }
+        guard !votes.isEmpty else { return }
+        let grouped = Dictionary(grouping: votes, by: { $0 })
+        if let best = grouped.max(by: { $0.value.count < $1.value.count })?.key {
+            session.dominantEmotion = best
+        }
     }
 
     private static func mapDraftToSessionBriefFields(
@@ -445,10 +473,10 @@ enum BriefStore {
     private static func dominantEmotionVote(sessions: [Session]) -> EmotionLabel {
         var counts: [EmotionLabel: Int] = [:]
         for s in sessions {
-            if let d = s.dominantEmotion {
+            if let d = s.dominantEmotion, d != .neutral {
                 counts[d, default: 0] += 1
             }
-            for i in s.insights {
+            for i in s.insights where i.emotion != .neutral {
                 counts[i.emotion, default: 0] += 1
             }
         }

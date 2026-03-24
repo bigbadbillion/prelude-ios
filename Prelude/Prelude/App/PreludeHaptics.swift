@@ -17,4 +17,8 @@ enum PreludeHaptics {
     static func errorTap() {
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
     }
+
+    static func destructiveActionCommitted() {
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+    }
 }

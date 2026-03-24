@@ -1,11 +1,15 @@
 import AVFoundation
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
     @State private var name: String = UserSettings.userName
     @State private var voiceLabel: String = "Checking…"
+    @State private var showClearAllConfirm = false
+    @State private var clearAllFailed = false
 
     private var palette: PreludePalette { PreludePalette.palette(for: scheme) }
 
@@ -101,14 +105,63 @@ struct SettingsView: View {
                 } header: {
                     Text("Medical disclaimer")
                 }
+
+                Section {
+                    Button(role: .destructive) {
+                        showClearAllConfirm = true
+                    } label: {
+                        Text("Clear all Prelude data")
+                    }
+                    .font(PreludeTypeScale.label())
+                } header: {
+                    Text("Danger")
+                        .font(PreludeTypeScale.caption())
+                } footer: {
+                    Text(
+                        "Removes every session, brief, weekly summary, and saved settings on this device. You’ll go through the disclaimer again on the next step."
+                    )
+                    .font(PreludeTypeScale.caption())
+                    .foregroundStyle(palette.tertiary)
+                }
             }
             .scrollContentBackground(.hidden)
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
+        .confirmationDialog(
+            "Clear all Prelude data?",
+            isPresented: $showClearAllConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Clear everything", role: .destructive) {
+                clearAllPreludeData(app: app)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This cannot be undone.")
+        }
+        .alert("Couldn’t clear data", isPresented: $clearAllFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Try again or restart the app.")
+        }
         .onAppear {
             refreshVoice()
             appState.refreshAvailability()
+        }
+    }
+
+    private func clearAllPreludeData(app: AppState) {
+        do {
+            try MemoryStore.clearAllLocalData(modelContext: modelContext)
+            app.sessionBriefToPresent = nil
+            app.showSession = false
+            app.localDataResetCount += 1
+            name = ""
+            PreludeHaptics.destructiveActionCommitted()
+        } catch {
+            clearAllFailed = true
+            PreludeHaptics.errorTap()
         }
     }
 

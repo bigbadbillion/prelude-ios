@@ -39,6 +39,7 @@
 		9B6DA577CFDD403B8BDA9DA9 /* Prelude/Memory/BriefDraftSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D71B1EB8950437D887D2349 /* Prelude/Memory/BriefDraftSanitizer.swift */; };
 		A08792FA954B4EC0BEFA2020 /* Prelude/UI/Root/MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01EF9C5D1A14264BD442772 /* Prelude/UI/Root/MainTabView.swift */; };
 		A833F12EF434490CBE828ED2 /* Prelude/UI/Weekly/WeeklyBriefView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EA50DB91E74B2595237BD9 /* Prelude/UI/Weekly/WeeklyBriefView.swift */; };
+		B7E8F9022A344B5C8D9E0F12 /* Prelude/UI/Weekly/EmotionalArcChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E8F9012A344B5C8D9E0F11 /* Prelude/UI/Weekly/EmotionalArcChartView.swift */; };
 		A8D97D0204554637A5B7691A /* Prelude/Memory/BriefPatientWordsNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87118937C44845889255425B /* Prelude/Memory/BriefPatientWordsNormalizer.swift */; };
 		AE5A4E2E850B49EE8DF941A3 /* Prelude/Memory/InsightStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41A85D14103483AAB68D26E /* Prelude/Memory/InsightStore.swift */; };
 		B6CB5524AEF847A8B5A42169 /* Prelude/Models/SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B74A9C60BF435A9F815B61 /* Prelude/Models/SwiftDataModels.swift */; };
@@ -95,6 +96,7 @@
 		5166CD083F6C4253B4CA47D8 /* Prelude/Tools/CheckPatternsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/CheckPatternsTool.swift; sourceTree = "<group>"; };
 		521C0D320E934208BD2CE94B /* Prelude/UI/Brief/BriefCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Brief/BriefCardView.swift; sourceTree = "<group>"; };
 		53EA50DB91E74B2595237BD9 /* Prelude/UI/Weekly/WeeklyBriefView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Weekly/WeeklyBriefView.swift; sourceTree = "<group>"; };
+		B7E8F9012A344B5C8D9E0F11 /* Prelude/UI/Weekly/EmotionalArcChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Weekly/EmotionalArcChartView.swift; sourceTree = "<group>"; };
 		61C8D33CF2B74421AB8B9FB9 /* Prelude/Voice/TTS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Voice/TTS.swift; sourceTree = "<group>"; };
 		620082C52F3F42B1A06899F3 /* Prelude/Agent/PreludeBriefAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/PreludeBriefAgent.swift; sourceTree = "<group>"; };
 		6CE35186CC064279B10CADD2 /* Prelude/Memory/PreludeBriefFoundationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/PreludeBriefFoundationModels.swift; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 				E38004E5136E4473809A1616 /* Prelude/UI/Session/PresenceShapeView.swift */,
 				7D47A92F2A6749DC89A3EE0F /* Prelude/UI/Session/SessionView.swift */,
 				D0C66175668E45469DAAF27C /* Prelude/UI/Settings/SettingsView.swift */,
+				B7E8F9012A344B5C8D9E0F11 /* Prelude/UI/Weekly/EmotionalArcChartView.swift */,
 				53EA50DB91E74B2595237BD9 /* Prelude/UI/Weekly/WeeklyBriefView.swift */,
 				4DF30421032F41CA8A91E79A /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift */,
 				F68D60C728A54DD297FAA22C /* Prelude/Voice/SpeechRecognizerService.swift */,
@@ -322,6 +325,7 @@
 				9471D565DE5846D6A155BFDA /* Prelude/UI/Session/PresenceShapeView.swift in Sources */,
 				6FE0568C4EEE461C81F50AA9 /* Prelude/UI/Session/SessionView.swift in Sources */,
 				344B93DE8E804C6DB63ACA50 /* Prelude/UI/Settings/SettingsView.swift in Sources */,
+				B7E8F9022A344B5C8D9E0F12 /* Prelude/UI/Weekly/EmotionalArcChartView.swift in Sources */,
 				A833F12EF434490CBE828ED2 /* Prelude/UI/Weekly/WeeklyBriefView.swift in Sources */,
 				898218D0E95648EDBCCCBE70 /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift in Sources */,
 				347A3F468F8442AB88BAB8AB /* Prelude/Voice/SpeechRecognizerService.swift in Sources */,

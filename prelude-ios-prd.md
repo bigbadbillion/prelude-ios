@@ -833,7 +833,7 @@ This shape is built with `Canvas` or `TimelineView` + SwiftUI paths. Its behavio
 - **Idle/Listening:** Slow, barely perceptible expansion and contraction (1 breath per ~4 seconds). Color: `preludeCalm`. Opacity: 0.15.
 - **User speaking:** Shape responds to vocal amplitude via `AVAudioEngine` tap. It breathes faster and more expansively, but organically — not in sync with individual phonemes like an equalizer. Color tints toward `preludeActive`. Think: the shape *hearing* you, not *displaying* your voice.
 - **Processing:** Shape contracts gently and holds still. Color tints to `preludeProcessing`. No spinner. No "thinking..." text. The stillness IS the communication.
-- **Agent speaking:** Shape expands slowly and holds a fuller form. Color: `preludeCalm`. A gentle, soft pulse in time with TTS speech rhythm.
+- **Agent speaking:** Shape expands slowly and holds a fuller form. Color: `preludeCalm`. A gentle, soft pulse in time with TTS speech rhythm. *Implementation note:* `AVSpeechSynthesizer` does not expose playback waveform metering; drive the pulse from `speechSynthesizer(_:willSpeakRangeOfSpeechString:utterance:)` (word/phrase timing) into a short decaying envelope so motion stays organic, not equalizer-like.
 
 The shape must never feel mechanical. Implemented with `spring()` animations driven by amplitude readings averaged over 200ms windows — not raw real-time data. Raw real-time data creates twitchy, robotic motion. Averaged data creates organic motion.
 
@@ -1008,7 +1008,11 @@ No charts on the history screen. Emotional trend data is surfaced only in the We
 
 #### Weekly Brief Screen
 
-One card, full-width, New York Semibold title: "This week." Below, three paragraphs of narrative prose — not bullet points — describing the week's emotional territory. A small section at the bottom: "Worth bringing up:" followed by one sentence in amber.
+Subtitle "Week of {date}" for the brief week. An **emotional arc** chart (dominant emotion over time for sessions referenced by that brief’s `sessionIds`, max six points, smooth interpolated curve, heavier/lighter axis) appears above the narrative when at least two eligible sessions exist; it is omitted otherwise. Styling matches the Expo chart card (subtle `rgba` panel, not main Liquid Glass) and Expo stroke/fill opacities. Points prefer `Session.dominantEmotion` from `tagEmotion`; when that tag is missing or `neutral`, the UI may infer an `EmotionLabel` from that session’s brief (`emotionalState`, `affectiveAnalysis`, themes) so the arc aligns with brief tone prose. Words like “reflective” that are not enum labels still won’t map to a discrete point color.
+
+Recurring themes pill row derived from the brief’s `themes` appears after the narrative card.
+
+One card, full-width, New York Semibold title: "This week." — same container treatment as Expo `mainCard` (solid warm `surface` fill + hairline border, not system material glass). Below, three paragraphs of narrative prose — not bullet points — describing the week's emotional territory. A small section at the bottom: "Worth bringing up:" followed by one sentence in amber.
 
 This screen generates once per week, after the week's first session. Tapping "Regenerate" updates it after subsequent sessions in the same week.
 
@@ -1017,7 +1021,7 @@ This screen generates once per week, after the week's first session. Tapping "Re
 - All text uses Dynamic Type — never hardcoded font sizes
 - Minimum tap target 44×44pt on all interactive elements
 - VoiceOver labels on all custom shapes and views
-- Reduce Motion: when enabled, the presence shape becomes a simple static ring that fades between states rather than animating
+- Reduce Motion: slower, shallower ambient breathing; presence remains stateful and never collapses to a flat static ring (still communicates listening / speaking / processing)
 - High Contrast: Liquid Glass surfaces receive a stronger tint overlay to meet WCAG AA
 - The crisis resource (988 link) is always VoiceOver accessible regardless of visual visibility
 
@@ -1088,6 +1092,7 @@ Prelude/
 │   │   └── SessionRowView.swift
 │   ├── Weekly/
 │   │   ├── WeeklyBriefView.swift
+│   │   ├── EmotionalArcChartView.swift
 │   │   └── WeeklyBriefViewModel.swift
 │   └── Shared/
 │       ├── PreludeColors.swift       — color tokens
@@ -1236,7 +1241,7 @@ Prelude/
 | 7.2 | Set up `PreludeFonts.swift` — New York, SF Pro, SF Mono scale | ⬜ TODO | |
 | 7.3 | Set up `PreludeAnimations.swift` — all animation tokens | ⬜ TODO | |
 | 7.4 | Implement `CHHapticEngine` wrapper in `PreludeHaptics.swift` | ⬜ TODO | Test all haptic patterns on device |
-| 7.5 | Build `PresenceShape.swift` — organic breathing shape with amplitude response | ⬜ TODO | The most important UI component |
+| 7.5 | Build presence view — organic breathing + mic + TTS-reactive amplitude | 🟡 Partial | `PresenceShapeView.swift`; path-based ink-drop / Canvas polish still optional |
 | 7.6 | Build `SessionView.swift` with two-zone layout | ⬜ TODO | Full screen, no nav bar |
 | 7.7 | Implement ambient background color shift per voice state | ⬜ TODO | 1.5s easeInOut transition |
 | 7.8 | Implement agent text word-by-word reveal synced to TTS | ⬜ TODO | |
@@ -1246,7 +1251,7 @@ Prelude/
 | 7.12 | Build `HistoryView.swift` — timeline layout | ⬜ TODO | |
 | 7.13 | Build `WeeklyBriefView.swift` — narrative prose layout | ⬜ TODO | |
 | 7.14 | Build `OnboardingView.swift` and all `AvailabilityGateView` states | ⬜ TODO | |
-| 7.15 | Implement Reduce Motion variants for all animations | ⬜ TODO | |
+| 7.15 | Reduce Motion: gentler/slower motion (especially presence); avoid eliminating core stateful animation | ⬜ TODO | Aligns with shipped presence policy |
 | 7.16 | Implement High Contrast variants for all Liquid Glass surfaces | ⬜ TODO | |
 | 7.17 | Full design review on device — dark mode, light mode, Dynamic Type sizes | ⬜ TODO | Do this on real hardware |
 

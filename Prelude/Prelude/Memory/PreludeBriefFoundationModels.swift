@@ -39,6 +39,14 @@ struct GenerableSessionBriefOut {
 
     @Guide(description: "Cross-session pattern only if prompt supplies one that fits; else empty. Never paste USER SPOKE.")
     var patternNote: String
+
+    @Guide(
+        description: """
+            Optional. Lowercase: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving — \
+            dominant tone for the whole session. Omit if unsure.
+            """
+    )
+    var dominantEmotionKey: String?
 }
 
 @Generable
@@ -79,7 +87,8 @@ enum PreludeBriefFoundationModels {
                 **Only patientWords** may echo the user’s voice in one tight carry line (≤~280 characters, not the full log).
                 emotionalState, themeMain, themeSecondary, focus1–3, patternNote: **synthesize** — do **not** copy sentences \
                 from USER SPOKE. patternNote: empty unless a cross-session pattern is given in the prompt and clearly fits.
-                Stay faithful to tone (e.g. good day → lighter). No clinical diagnosis. Unused string fields: empty.
+                Stay faithful to tone (e.g. good day → lighter). No clinical diagnosis. Unused string fields: empty. \
+                dominantEmotionKey: set when confident; otherwise omit.
                 """
             )
         }

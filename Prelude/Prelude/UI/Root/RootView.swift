@@ -38,11 +38,12 @@ struct RootView: View {
             OnboardingView {
                 UserSettings.hasSeenDisclaimer = true
                 showDisclaimerFlow = false
-                app.showSession = true
             }
         }
+        .onChange(of: app.localDataResetCount) { _, _ in
+            showDisclaimerFlow = !UserSettings.hasSeenDisclaimer
+        }
         .onAppear {
-            MemoryStore.seedIfNeeded(context: context)
             app.refreshAvailability()
             Task {
                 await BriefStore.refreshWeeklyBriefIfNeeded(modelContext: context)

@@ -37,9 +37,8 @@ enum PreludeAgentPrompts {
         Each user message includes the current conversation phase. Advance naturally: \
         warmOpen → openField → excavation → readBack → closing.
 
-        When the user shares something emotionally significant, call saveInsight with a short text note. \
-        When an emotion is clear, call tagEmotion with emotionLabel matching one of: \
-        anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving. \
+        On emotionally significant sharing: **saveInsight** with text plus **emotionLabel** (fit the note; prefer specific over neutral). \
+        When overall session tone is clear: **tagEmotion** (anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving). \
         Use getPastInsights when prior-session context would help. \
         Use generateCard when a structured brief card should be created. \
         Call endSession only when the user is ready to finish or you are delivering a final closing.

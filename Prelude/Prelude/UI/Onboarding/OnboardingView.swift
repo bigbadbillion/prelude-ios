@@ -61,13 +61,13 @@ struct OnboardingView: View {
                         PreludeHaptics.sessionBegin()
                         onComplete()
                     } label: {
-                        Text("I understand — begin")
+                        Text("I understand")
                             .font(PreludeTypeScale.cardTitle())
                             .foregroundStyle(palette.amber)
                     }
                     .padding(.top, 8)
                     .opacity(appeared ? 1 : 0)
-                    .accessibilityLabel("I understand, begin")
+                    .accessibilityLabel("I understand, continue to home")
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 40)
