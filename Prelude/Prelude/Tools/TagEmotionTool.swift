@@ -10,10 +10,10 @@ struct TagEmotionTool: PreludeAgentTool {
         self.parsedEmotion = fallback
     }
 
-    /// On-device model supplies a **EmotionLabel** raw string. Invalid labels **do not** overwrite (avoids silent `neutral`).
+    /// On-device model supplies a **EmotionLabel** raw string. Invalid labels **do not** overwrite (avoids silent `.calm`).
     init(parsingRawLabel raw: String) {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        self.parsedEmotion = EmotionLabel(rawValue: trimmed)
+        self.parsedEmotion = EmotionLabel.parseCanonicalKey(trimmed)
     }
 
     func execute(_ ctx: ToolExecutionContext) async throws {

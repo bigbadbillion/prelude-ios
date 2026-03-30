@@ -9,6 +9,7 @@ struct HomeView: View {
     @Query(sort: \Session.startedAt, order: .reverse) private var sessions: [Session]
 
     @State private var showAvailabilityAlert = false
+    @State private var showPremiumVoiceWait = false
 
     private var palette: PreludePalette { PreludePalette.palette(for: scheme) }
     private var isDark: Bool { scheme == .dark }
@@ -92,6 +93,18 @@ struct HomeView: View {
         } message: {
             Text(app.availability.message)
         }
+        .sheet(isPresented: $showPremiumVoiceWait) {
+            PremiumVoiceWaitSheet(
+                isPresented: $showPremiumVoiceWait,
+                palette: palette,
+                isDark: isDark,
+                onContinueToSession: {
+                    appState.showSession = true
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
     }
 
     private var greetingText: String {
@@ -137,6 +150,11 @@ struct HomeView: View {
             }
             if !UserSettings.hasSeenDisclaimer {
                 // Root handles first-launch flow; if user cleared defaults, show alert
+                return
+            }
+            let hasCompletedBefore = !completedSessionsNewestFirst.isEmpty
+            if PreludeTTS.shouldWaitForPremiumVoiceBeforeFirstSession(userHasCompletedSession: hasCompletedBefore) {
+                showPremiumVoiceWait = true
                 return
             }
             appState.showSession = true
@@ -294,12 +312,12 @@ struct HomeView: View {
             if !line.isEmpty {
                 return (line, nil)
             }
-            return ("Not tagged", .neutral)
+            return ("Not tagged", .calm)
         }()
 
         return HStack(alignment: .center, spacing: 12) {
             Circle()
-                .fill(Color.preludeEmotion(emotionForColor ?? .neutral))
+                .fill(Color.preludeEmotion(emotionForColor ?? .calm))
                 .frame(width: 10, height: 10)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {

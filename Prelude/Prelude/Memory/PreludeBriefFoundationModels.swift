@@ -42,7 +42,7 @@ struct GenerableSessionBriefOut {
 
     @Guide(
         description: """
-            Optional. Lowercase: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving — \
+            Optional. Lowercase: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective — \
             dominant tone for the whole session. Omit if unsure.
             """
     )
@@ -63,7 +63,7 @@ struct GenerableWeeklyBriefOut {
     @Guide(description: "Third theme; empty if none.")
     var theme3: String
 
-    @Guide(description: "Emotion label: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving")
+    @Guide(description: "Emotion label: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective")
     var dominantEmotion: String
 
     @Guide(description: "One or two sentences: what emotion dominated and how it shifted through the week.")

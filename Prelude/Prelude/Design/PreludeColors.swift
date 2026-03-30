@@ -81,9 +81,12 @@ extension Color {
         case .angry: return Color(red: 0.682, green: 0.420, blue: 0.420)
         case .confused: return Color(red: 0.549, green: 0.482, blue: 0.682)
         case .hopeful: return PreludeColors.sage
+        case .happy: return Color(red: 0.451, green: 0.682, blue: 0.529)
+        case .excited: return Color(red: 0.898, green: 0.580, blue: 0.345)
         case .overwhelmed: return Color(red: 0.682, green: 0.549, blue: 0.420)
         case .frustrated: return Color(red: 0.769, green: 0.451, blue: 0.294)
-        case .neutral: return Color(red: 0.620, green: 0.580, blue: 0.522)
+        case .calm: return Color(red: 0.620, green: 0.580, blue: 0.522)
+        case .reflective: return Color(red: 0.451, green: 0.529, blue: 0.620)
         case .grieving: return Color(red: 0.482, green: 0.549, blue: 0.682)
         }
     }

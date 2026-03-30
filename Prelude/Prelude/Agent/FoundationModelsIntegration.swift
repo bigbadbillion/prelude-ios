@@ -17,7 +17,8 @@ struct GenerableAgentDecision {
         description: """
             One of: respond, askQuestion, saveInsight, reflectBack, readBackSummary, endSession. \
             Prefer **askQuestion** when you are mainly offering a reflective follow-up; use saveInsight / \
-            tagEmotion / generateCard / getPastInsights via tools when appropriate.
+            tagEmotion / generateCard / getPastInsights via tools when appropriate. \
+            Use **readBackSummary** only when the user has shared enough real material to summarize (the host enforces this).
             """
     )
     var action: String
@@ -26,7 +27,9 @@ struct GenerableAgentDecision {
         description: """
             Text for TTS: warm, calm, brief. **Default:** end with **one** open reflective question after \
             the user shares (unless phase is closing, crisis, or they only gave a minimal greeting). \
-            Pattern: short acknowledgment, then a question that helps them notice or articulate more.
+            **Vary** how you open: sometimes name the tension directly, sometimes a short empathic line without \
+            “it sounds like” / “that sounds like” (avoid that formula most turns — it feels robotic). \
+            Pattern: brief connect + one question that deepens reflection.
             """
     )
     var spokenResponse: String
@@ -52,7 +55,8 @@ struct GenerableOpeningUtterance {
     @Guide(
         description: """
             Warm, brief invitation for TTS; one or two sentences. **End with an open question** \
-            (e.g. how they are arriving today) so they have a clear invitation to speak.
+            (e.g. how they are arriving today). If the prompt gives a preferred name, use it once. \
+            If it gives last-session context, nod to it briefly then shift to what’s here now — don’t lecture.
             """
     )
     var spokenResponse: String
@@ -88,8 +92,8 @@ enum PreludeFMToolRunner {
     /// Parses model label; falls back to substring match in insight text (same idea as brief inference).
     private static func resolvedEmotionForInsight(text: String, rawLabel: String) -> EmotionLabel {
         let t = rawLabel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if let e = EmotionLabel(rawValue: t) { return e }
-        return EmotionLabel.firstMentioned(in: text) ?? .neutral
+        if let e = EmotionLabel.parseCanonicalKey(t) { return e }
+        return EmotionLabel.firstMentioned(in: text) ?? .calm
     }
 
     static func tagEmotion(box: PreludeToolContextBox, label: String) async throws -> String {
@@ -137,8 +141,8 @@ struct SaveInsightFMTool: Tool {
 
         @Guide(
             description: """
-                Emotion this insight carries: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving. \
-                Prefer a **specific** label; use neutral only if the note is emotionally flat. Omit only if unsure (host will infer from text).
+                Emotion this insight carries: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective. \
+                Prefer a **specific** label; use calm only if the note is emotionally flat. Omit only if unsure (host will infer from text).
                 """
         )
         var emotionLabel: String?
@@ -160,7 +164,7 @@ struct TagEmotionFMTool: Tool {
 
     @Generable
     struct Arguments {
-        @Guide(description: "Emotion key: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving")
+        @Guide(description: "Emotion key: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective")
         var emotionLabel: String
     }
 
@@ -229,6 +233,14 @@ struct EndSessionFMTool: Tool {
 /// the app deadlocks after the first tool-using turn. Model work runs on the generic executor; only
 /// session/context/agent mutations use `MainActor.run`.
 enum PreludeFoundationModels {
+    /// Keeps read-back prompts within a sensible size for on-device context limits.
+    private static func truncatedTranscriptForReadBack(_ log: String, maxChars: Int = 3800) -> String {
+        let t = log.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.isEmpty { return "(No user transcript lines yet — keep any recap tentative.)" }
+        guard t.count > maxChars else { return t }
+        return String(t.prefix(maxChars)) + "\n…(earlier user turns omitted.)"
+    }
+
     /// Creates or returns a **LanguageModelSession** matching `includeTools` (recreates if mode changed).
     @available(iOS 26.0, *)
     private static func languageModelSession(
@@ -280,9 +292,29 @@ enum PreludeFoundationModels {
 
         await MainActor.run { box.session = session }
 
+        let (preferredName, previousContext) = await MainActor.run {
+            let name = UserSettings.userName.trimmingCharacters(in: .whitespacesAndNewlines)
+            let prev = SessionStore.previousSessionOpeningContext(in: modelContext)
+            return (name, prev)
+        }
+
+        let openingInstructions: String = {
+            var chunks: [String] = [
+                "The reflection session just started. The user has not spoken yet (phase warmOpen).",
+                "Output only spokenResponse: a warm, brief invitation to settle in, ending with **one** open question about how they are arriving or what is on their mind (one or two sentences for text-to-speech)."
+            ]
+            if !preferredName.isEmpty {
+                chunks.append("Preferred first name: \(preferredName) — greet with it once, naturally.")
+            }
+            if let prev = previousContext {
+                chunks.append("Last completed reflection (continuity only; paraphrase, do not read as a bullet list): \(prev)")
+                chunks.append("Optionally acknowledge one thread from last time in a short phrase, then invite what feels present **now**.")
+            }
+            return chunks.joined(separator: "\n\n")
+        }()
+
         let promptOpening = Prompt {
-            "The reflection session just started. The user has not spoken yet (phase warmOpen)."
-            "Output only spokenResponse: a warm, brief invitation to settle in, ending with **one** open question about how they are arriving or what is on their mind (one or two sentences for text-to-speech)."
+            openingInstructions
         }
 
         do {
@@ -317,7 +349,7 @@ enum PreludeFoundationModels {
         do {
             guard let lm = await languageModelSession(agent: agent, box: box, includeTools: false) else { return nil }
             let prompt = Prompt {
-                "The reflection session just started. The user has not spoken yet."
+                openingInstructions
                 "Output structured fields: action (prefer askQuestion), spokenResponse (warm brief TTS that **ends with an open question**), reasoning (may be empty)."
             }
             let response = try await lm.respond(
@@ -348,7 +380,8 @@ enum PreludeFoundationModels {
     @available(iOS 26.0, *)
     nonisolated static func runTurn(
         agent: AgentController,
-        userUtterance: String,
+        userUtteranceForModel: String,
+        rawTranscriptLine: String,
         modelContext: ModelContext,
         session: Session,
         box: PreludeToolContextBox
@@ -360,9 +393,12 @@ enum PreludeFoundationModels {
         let phaseLabel = await MainActor.run { agent.currentPhase.rawValue }
         let phase = await MainActor.run { agent.currentPhase }
         let recapHint = await MainActor.run { agent.shouldSteerTowardSessionRecapInPrompt }
+        let sessionTranscriptBlock = await MainActor.run {
+            Self.truncatedTranscriptForReadBack(session.userTranscriptLog)
+        }
         let prompt = Prompt {
             "Current conversation phase: \(phaseLabel)."
-            "User said: \(userUtterance)"
+            "User said (latest turn): \(userUtteranceForModel)"
             """
             Respond with structured output: action (one of respond, askQuestion, saveInsight, reflectBack, readBackSummary, endSession), \
             spokenResponse for TTS, reasoning (may be brief). Use tools when helpful.
@@ -374,8 +410,13 @@ enum PreludeFoundationModels {
             """
             if recapHint {
                 """
-                Phase note — read-back / wrap-up: spokenResponse should **recap what you gathered** from the session (themes, feelings, what matters for therapy) \
-                in a short, natural paragraph, then **invite them to add more or confirm it's enough** before you close. Prefer action **readBackSummary** when that recap is the main move.
+                Session transcript (user’s words, chronological — this is the **whole arc** so far):
+                \(sessionTranscriptBlock)
+                """
+                """
+                Phase note — read-back: spokenResponse must **synthesize across the transcript above** (themes, feelings, what matters for therapy) — \
+                **not** paraphrase only the latest turn. One short natural paragraph, then invite them to add more or confirm it’s enough. \
+                Prefer action **readBackSummary** when that recap is the main move.
                 """
             } else if phase == .closing {
                 """
@@ -398,7 +439,8 @@ enum PreludeFoundationModels {
                 throw TurnError.emptyDecision
             }
             await MainActor.run {
-                agent.applyModelPhaseTransition(for: decision.action)
+                agent.recordUserTurnMetricsOnly(rawTranscriptLine)
+                agent.applyPhaseAfterAgentTurn(userUtterance: rawTranscriptLine, session: session, modelAction: decision.action)
                 session.phase = agent.currentPhase
                 try? modelContext.save()
             }

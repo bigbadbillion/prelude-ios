@@ -13,7 +13,7 @@
 | Platform | iOS 26+ / iPhone with Apple Intelligence |
 | Minimum Device | iPhone 15 Pro (A17 Pro) |
 | AI Runtime | Foundation Models (on-device, zero API cost) |
-| Last Updated | March 23, 2026 |
+| Last Updated | March 30, 2026 (phase policy + barge-in recovery) |
 | Build Status | 🟡 In Progress — Phase 5 polish (presence + accessibility + App Store) |
 
 ---
@@ -80,6 +80,9 @@
 - [x] Settings — Apple Intelligence / on-device model status, diagnostics line, Refresh, Danger “clear all data” — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/App/UserSettings.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Root/RootView.swift, Prelude/Prelude/App/PreludeHaptics.swift
 - [x] Presence — ambient breath + dual reactivity (mic smoothing while listening; TTS `willSpeakRange` envelope while agent speaks; prelude-ios §10.5) — **Files:** Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/PresenceShapeView.swift
 - [x] Session read-back recap (gathered themes / invitation to add or confirm) + live transcript autoscroll — **Files:** Prelude/Prelude/Agent/PreludeAgentPrompts.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/SessionView.swift, PRELUDE_PRD.md, prelude-ios-prd.md
+- [x] Agent continuity + read-back grounding — opening uses **Settings name** + **last completed session** context (brief or transcript clip) + optional **cross-session theme**; read-back prompts include **full `userTranscriptLog`** and recap steering **only in `readBack`** (not late excavation); prompts discourage repetitive “it sounds like…” — **Files:** Prelude/Prelude/Memory/SessionStore.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/PreludeAgentPrompts.swift, PRELUDE_PRD.md
+- [ ] Conversation phase coordination (user-grounded) + voice barge-in — **deterministic policy** (`ConversationPhasePolicy`): cumulative user words, substantive turns, saved insights, English wrap/end phrases, validated `readBackSummary` / `endSession`; **no turn-count phase buckets** on device. **Voice interruption (barge-in)**: temporarily disabled in the last stability recovery build to avoid `AVAudioEngine` render/stall issues; will be re-enabled after duplex capture/AEC behavior is locked down. — **Files:** Prelude/Prelude/Agent/ConversationPhasePolicy.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/Voice/SpeechRecognizerService.swift, Prelude/Prelude/UI/Session/SessionView.swift, Prelude/PreludeTests/ConversationPhasePolicyTests.swift, Prelude/scripts/generate_xcode_project.py, Prelude/Prelude.xcodeproj/project.pbxproj, PRELUDE_PRD.md
+- [x] TTS — Premium/Enhanced voice asset prefetch on launch + first-session wait sheet (indeterminate; no OS download %) + `usesApplicationAudioSession = false` for TTS vs mic/Siri routing — **Files:** Prelude/Prelude/Voice/TTS.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/App/PreludeApp.swift, Prelude/Prelude/UI/Home/HomeView.swift, Prelude/Prelude/UI/Home/PremiumVoiceWaitSheet.swift, Prelude/PreludeTests/PreludeTTSPrefetchTests.swift, Prelude/scripts/generate_xcode_project.py, Prelude/Prelude.xcodeproj/project.pbxproj
 - [ ] Dynamic Type support
 - [ ] VoiceOver labels on custom shapes
 - [ ] App Store privacy manifest
@@ -184,7 +187,9 @@ Loop continues until agent or user ends session
 
 **Target duration:** 8–12 minutes. Agent guides pacing. No hard cutoff.
 
-**Read-back (toward session end):** In the **readBack** phase, the agent **recaps aloud** what it gathered (main threads, emotional tone, what seems important to bring to therapy) so the user can judge whether to **add more** or whether it **feels sufficient** before closing and brief generation.
+**Opening:** When the user has a **name** in Settings and at least one **completed** prior session, the first spoken line may greet by name and briefly acknowledge **last time’s** brief/transcript-relevant thread, then invite what’s present **now** (host injects this context into the opening prompt).
+
+**Read-back (toward session end):** In the **readBack** phase, the agent **recaps aloud** what it gathered (main threads, emotional tone, what seems important to bring to therapy) so the user can judge whether to **add more** or whether it **feels sufficient** before closing and brief generation. The host includes the **full session transcript** in the read-back turn prompt so the on-device model synthesizes the **whole arc**, not only the latest exchange.
 
 ### F2 — Agentic Conversation Engine
 Tool-based agent loop. Not a chatbot. The agent has a goal: surface what the user needs to bring to therapy. See Section 6 for full architecture.
@@ -206,6 +211,8 @@ Generated after every session. **Dedicated brief agent:** a separate on-device *
 **Post-processing:** **`BriefDraftSanitizer`** detects transcript-shaped text in non–`what_to_say` fields (substring / turn overlap, length caps) and clears or clamps so the brief stays scannable. Applied in the tool path, draft mapping, one-shot FM fallback, and related **`BriefStore`** assembly.
 
 **Concurrency:** **`PreludeBriefAgent.run`** is **`nonisolated`** so **`respond`** does not execute on the main actor while tools use **`MainActor.run`** to write the **`BriefGenerationDraft`** — avoids the same SwiftData deadlock class as the live session agent.
+
+**Session brief screen:** Under “Session Brief,” the date row includes **`EmotionLabel.resolved(for:)`** (same rules as the weekly arc): one capitalized label plus a small emotion-colored dot beside the date.
 
 **Fallback order:** brief agent → single-shot **`GenerableSessionBriefOut`** (same voice rules in instructions) → card/insight template assembly. **Five to seven structured cards** covering:
 1. How I showed up today (emotional state)
@@ -401,7 +408,7 @@ enum VoiceState {
 }
 
 enum EmotionLabel: String, Codable, CaseIterable {
-    case anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving
+    case anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective
 }
 
 enum CardType: String, Codable {
@@ -579,7 +586,7 @@ error:           short soft single — never harsh
 
 **Weekly Brief Screen**
 - Subtitle: "Week of {date}" from the brief’s `weekStart`
-- Emotional arc card (above narrative): dominant emotion per session from `WeeklyBrief.sessionIds`, smooth curve (Catmull–Rom), gradient fill and point labels; "heavier" / "lighter" axis; hidden if fewer than two tagged sessions; chart container matches Expo `rgba` tint (not Liquid Glass); line/fill use latest-point emotion color at Expo opacities; if `dominantEmotion` is missing or `.neutral`, infer a label from that session’s brief (`emotionalState`, `affectiveAnalysis`, themes) when prose names another `EmotionLabel`
+- Emotional arc card (above narrative): dominant emotion per session from `WeeklyBrief.sessionIds`, smooth curve (Catmull–Rom), gradient fill and point labels; "heavier" / "lighter" axis; shown when **two or more** eligible completed sessions exist for that week (up to six points, oldest→newest); **`.calm` is plotted** like any other label; chart container matches Expo `rgba` tint (not Liquid Glass); line/fill use latest-point **tagged** `dominantEmotion` color at Expo opacities; point labels use `EmotionLabel.resolved(for:)` — if `dominantEmotion` is missing or baseline `.calm`, infer from that session’s brief (`emotionalState`, `affectiveAnalysis`, themes) when prose names another `EmotionLabel`; persisted legacy `neutral` decodes as `calm`
 - Recurring themes pill row: themed tags from `weeklyBrief.themes` (amber outlines)
 - Full-width narrative card: Expo `mainCard` — solid `colors.surface` + border (not Liquid Glass), New York Semibold: "This week."
 - Three paragraphs of narrative prose (not bullets)
@@ -642,6 +649,7 @@ Prelude/
 │   ├── WeeklyBrief.swift
 │   ├── EmotionalArc.swift
 │   ├── EmotionLabel.swift
+│   ├── EmotionLabel+ResolvedForSession.swift
 │   └── CardType.swift
 └── UI/
     ├── Home/
@@ -740,5 +748,5 @@ Prelude/
 | Voice / session UI | `Prelude/Prelude/Voice/VoiceEngine.swift`, `Prelude/Prelude/UI/Session/SessionView.swift` |
 | Settings indicator | `Prelude/Prelude/UI/Settings/SettingsView.swift` |
 | Tools + context | `Prelude/Prelude/Tools/*.swift` (esp. Save/Tag/Generate/GetPast + `ToolExecutionContext.swift`) |
-| Brief synthesis (session + weekly) | `Prelude/Prelude/Memory/BriefStore.swift` (heuristic dominant fallback if tag still weak), `Prelude/Prelude/Memory/BriefGenerationDraft.swift`, `Prelude/Prelude/Memory/BriefDraftSanitizer.swift`, `Prelude/Prelude/Memory/BriefPatientWordsNormalizer.swift`, `Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift` (+ optional `dominantEmotionKey` one-shot), `Prelude/Prelude/Agent/PreludeBriefAgent.swift` (structured ack `dominantEmotionKey` → `Session.dominantEmotion`), `Prelude/Prelude/Models/EmotionLabel.swift` (`parseCanonicalKey`), `Prelude/Prelude/Memory/PatternDetector.swift`, `Prelude/Prelude/Memory/SessionStore.swift`, `Prelude/Prelude/Memory/InsightStore.swift`, `Prelude/Prelude/UI/Brief/BriefDetailView.swift`, `Prelude/Prelude/UI/Weekly/WeeklyBriefView.swift`, `Prelude/Prelude/UI/Weekly/EmotionalArcChartView.swift` (arc plot omits neutral-resolved points) |
+| Brief synthesis (session + weekly) | `Prelude/Prelude/Memory/BriefStore.swift` (heuristic dominant fallback if tag still weak), `Prelude/Prelude/Memory/BriefGenerationDraft.swift`, `Prelude/Prelude/Memory/BriefDraftSanitizer.swift`, `Prelude/Prelude/Memory/BriefPatientWordsNormalizer.swift`, `Prelude/Prelude/Memory/PreludeBriefFoundationModels.swift` (+ optional `dominantEmotionKey` one-shot), `Prelude/Prelude/Agent/PreludeBriefAgent.swift` (structured ack `dominantEmotionKey` → `Session.dominantEmotion`), `Prelude/Prelude/Models/EmotionLabel.swift` (`parseCanonicalKey`), `Prelude/Prelude/Models/EmotionLabel+ResolvedForSession.swift` (`resolved(for:)`), `Prelude/Prelude/Memory/PatternDetector.swift`, `Prelude/Prelude/Memory/SessionStore.swift`, `Prelude/Prelude/Memory/InsightStore.swift`, `Prelude/Prelude/UI/Brief/BriefDetailView.swift` (date + resolved label header), `Prelude/Prelude/UI/Weekly/WeeklyBriefView.swift`, `Prelude/Prelude/UI/Weekly/EmotionalArcChartView.swift` (weekly arc includes all eligible sessions; calm plotted) |
 | Project / docs | `Prelude/Prelude.xcodeproj/project.pbxproj`, `Prelude/scripts/generate_xcode_project.py`, `Prelude/README.md`, `.cursor/rules/prelude-prd-tracker.mdc` |

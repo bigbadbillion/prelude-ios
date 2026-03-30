@@ -1,12 +1,13 @@
 import Foundation
 
 enum EmotionLabel: String, Codable, CaseIterable, Sendable {
-    case anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving
+    case anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective
 
-    /// Strict parse for model-emitted keys (trim + lowercase `rawValue` only). Prefer this over substring inference.
+    /// Model output and persisted raw values (trim + lowercase). Maps legacy `neutral` → `.calm`.
     static func parseCanonicalKey(_ raw: String) -> EmotionLabel? {
         let t = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !t.isEmpty else { return nil }
+        if t == "neutral" { return .calm }
         return EmotionLabel(rawValue: t)
     }
 

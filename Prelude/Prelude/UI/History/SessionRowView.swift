@@ -11,7 +11,7 @@ struct SessionRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             Circle()
-                .fill(Color.preludeEmotion(session.dominantEmotion ?? .neutral))
+                .fill(Color.preludeEmotion(session.dominantEmotion ?? .calm))
                 .frame(width: 10, height: 10)
                 .padding(.top, 5)
                 .accessibilityHidden(true)

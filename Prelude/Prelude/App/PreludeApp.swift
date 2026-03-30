@@ -5,6 +5,10 @@ import SwiftUI
 struct PreludeApp: App {
     @State private var appState = AppState()
 
+    init() {
+        PreludeTTS.prefetchPreferredVoiceAssets()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

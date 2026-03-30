@@ -5,9 +5,9 @@ struct SaveInsightTool: PreludeAgentTool {
 
     /// Text supplied by the model via **FoundationModels** tool arguments (scripted path uses default).
     var capturedText: String = "Captured during session"
-    var emotion: EmotionLabel = .neutral
+    var emotion: EmotionLabel = .calm
 
-    init(capturedText: String = "Captured during session", emotion: EmotionLabel = .neutral) {
+    init(capturedText: String = "Captured during session", emotion: EmotionLabel = .calm) {
         self.capturedText = capturedText
         self.emotion = emotion
     }

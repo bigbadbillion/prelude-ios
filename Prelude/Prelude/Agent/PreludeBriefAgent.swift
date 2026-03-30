@@ -99,7 +99,7 @@ struct GenerableBriefAgentAck {
     /// Canonical session label — structured output avoids inferring from prose. Optional so a bad generation doesn’t fail the whole completion.
     @Guide(
         description: """
-            Lowercase token only: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, neutral, grieving — \
+            Lowercase token only: anxious, sad, angry, confused, hopeful, overwhelmed, frustrated, calm, happy, excited, grieving, reflective — \
             dominant tone for the **whole** reflection after reading USER SPOKE. Omit if you cannot choose one.
             """
     )

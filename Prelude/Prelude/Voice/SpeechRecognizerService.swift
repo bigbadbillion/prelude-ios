@@ -27,7 +27,10 @@ final class SpeechRecognizerService: NSObject {
         }
     }
 
-    func startCapturing(onPartial: @escaping (String, Bool) -> Void) throws {
+    func startCapturing(
+        onPartial: @escaping (String, Bool) -> Void,
+        onError: ((Error) -> Void)? = nil
+    ) throws {
         stopCapturing()
         self.onPartial = onPartial
         liveTranscript = ""
@@ -39,10 +42,15 @@ final class SpeechRecognizerService: NSObject {
         throw SpeechRecognizerServiceError.simulatorUnavailable
         #else
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.duckOthers, .defaultToSpeaker])
+        try session.setCategory(
+            .playAndRecord,
+            mode: .spokenAudio,
+            options: [.duckOthers, .defaultToSpeaker]
+        )
         try session.setActive(true, options: .notifyOthersOnDeactivation)
 
         let input = audioEngine.inputNode
+
         let format = input.inputFormat(forBus: 0)
         let sampleRate = Double(format.sampleRate)
         let channelCount = Double(format.channelCount)
@@ -73,8 +81,8 @@ final class SpeechRecognizerService: NSObject {
                     self.liveTranscript = result.bestTranscription.formattedString
                     self.onPartial?(self.liveTranscript, result.isFinal)
                 }
-                if error != nil {
-                    self.onPartial?(self.liveTranscript, true)
+                if let error {
+                    onError?(error)
                 }
             }
         }

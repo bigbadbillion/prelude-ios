@@ -128,11 +128,12 @@ struct SessionView: View {
             agent.attachToolContext(modelContext: context, session: session)
 
             voice.configure(
-                onUserTurnComplete: { transcript in
-                    session.appendUserTurn(transcript)
+                onUserTurnComplete: { rawTranscript, modelUtterance in
+                    session.appendUserTurn(rawTranscript)
                     try? context.save()
                     return await agent.respondToUserTurn(
-                        userUtterance: transcript,
+                        userUtteranceForModel: modelUtterance,
+                        rawTranscriptLine: rawTranscript,
                         modelContext: context,
                         session: session
                     )

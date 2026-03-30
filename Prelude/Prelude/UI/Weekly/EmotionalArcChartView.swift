@@ -7,8 +7,11 @@ enum EmotionalArcChartGeometry {
     /// Higher = lighter / more positive on the chart (maps to lower Y).
     static func weight(for emotion: EmotionLabel) -> CGFloat {
         switch emotion {
+        case .excited: return 0.95
+        case .happy: return 0.91
         case .hopeful: return 0.88
-        case .neutral: return 0.52
+        case .calm: return 0.52
+        case .reflective: return 0.58
         case .confused: return 0.38
         case .frustrated: return 0.28
         case .sad: return 0.22
@@ -50,7 +53,7 @@ enum EmotionalArcChartGeometry {
 
 // MARK: - View
 
-/// Emotional arc over completed sessions. Stroke and area gradient use the **latest session’s tagged** `dominantEmotion` only — same as Expo `weekly.tsx` (`dominantColor` / `emotionColors`, not brief inference). Point labels still use `resolvedEmotion(for:)` so dots can reflect brief tone when the tag is missing or `.neutral`.
+/// Emotional arc over completed sessions. Stroke and area gradient use the **latest session’s tagged** `dominantEmotion` only — same as Expo `weekly.tsx` (`dominantColor` / `emotionColors`, not brief inference). Point labels use `EmotionLabel.resolved(for:)` so dots can reflect brief tone when the tag is missing or baseline `.calm`.
 struct EmotionalArcChartView: View {
     @Environment(\.colorScheme) private var scheme
 
@@ -58,7 +61,7 @@ struct EmotionalArcChartView: View {
 
     private var isDark: Bool { scheme == .dark }
 
-    /// Expo `weekly.tsx`: `dominantColor` from `pts_sessions[last].dominantEmotion` via `emotionColors`, else `PreludeColors.calm`. Using `resolvedEmotion` here would change the stroke (e.g. neutral grey-taupe vs anxious `#B5835A` brown).
+    /// Expo `weekly.tsx`: `dominantColor` from `pts_sessions[last].dominantEmotion` via `emotionColors`, else `PreludeColors.calm`. Using `EmotionLabel.resolved` for stroke would change the line (e.g. calm grey-taupe vs anxious brown).
     private static func lineAndFillTintColor(for sessions: [Session]) -> Color {
         guard let last = sessions.last(where: { $0.completedAt != nil }) else {
             return PreludeColors.calm
@@ -67,30 +70,6 @@ struct EmotionalArcChartView: View {
             return PreludeColors.calm
         }
         return Color.preludeEmotion(tagged)
-    }
-
-    /// RN charts `dominantEmotion` from `tagEmotion`. Weekly prose can reflect `SessionBrief` tone without updating that tag; infer from brief fields so the arc isn’t stuck on `neutral` when the brief names another `EmotionLabel`.
-    static func resolvedEmotion(for session: Session) -> EmotionLabel {
-        let briefCorpus = [
-            session.brief?.emotionalState,
-            session.brief?.affectiveAnalysis,
-            session.brief?.themes.joined(separator: " "),
-        ]
-        .compactMap { $0 }
-        .joined(separator: "\n")
-        let inferred = EmotionLabel.firstMentioned(in: briefCorpus)
-        guard let tagged = session.dominantEmotion else {
-            return inferred ?? .neutral
-        }
-        if tagged == .neutral, let inferred, inferred != .neutral {
-            return inferred
-        }
-        return tagged
-    }
-
-    /// Weekly arc plot: omit **neutral** points so the curve reflects emotionally specific check-ins (needs 2+ non-neutral after filter to show).
-    static func sessionsForArcPlot(_ sessions: [Session]) -> [Session] {
-        sessions.filter { resolvedEmotion(for: $0) != .neutral }
     }
 
     private static let chartDateFormatter: DateFormatter = {
@@ -172,7 +151,7 @@ struct EmotionalArcChartView: View {
         guard sessions.count >= 2 else { return "" }
         let parts = sessions.compactMap { s -> String? in
             guard let d = s.completedAt else { return nil }
-            let e = Self.resolvedEmotion(for: s)
+            let e = EmotionLabel.resolved(for: s)
             return "\(Self.chartDateFormatter.string(from: d)), \(e.rawValue)"
         }
         return "Emotional arc across sessions: " + parts.joined(separator: "; ")
@@ -216,7 +195,7 @@ struct EmotionalArcChartView: View {
         var entries: [LayoutEntry] = []
         for (i, pair) in plottedSessions.enumerated() {
             let (s, completed) = pair
-            let emotion = Self.resolvedEmotion(for: s)
+            let emotion = EmotionLabel.resolved(for: s)
             let w = EmotionalArcChartGeometry.weight(for: emotion)
             let x: CGFloat
             if m == 1 {

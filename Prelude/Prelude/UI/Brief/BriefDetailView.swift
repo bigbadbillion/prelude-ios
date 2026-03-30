@@ -59,9 +59,7 @@ struct BriefDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 8)
 
-                Text(sessionDate(session.startedAt))
-                    .font(PreludeTypeScale.label())
-                    .foregroundStyle(palette.secondary)
+                briefDateAndEmotionRow(session: session)
                     .padding(.bottom, 20)
 
                 ForEach(Array(cards.enumerated()), id: \.offset) { index, card in
@@ -117,6 +115,29 @@ struct BriefDetailView: View {
         let f = DateFormatter()
         f.dateFormat = "EEEE, MMMM d"
         return f.string(from: date)
+    }
+
+    private func briefDateAndEmotionRow(session: Session) -> some View {
+        let label = EmotionLabel.resolved(for: session)
+        let title = label.rawValue.localizedCapitalized
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(sessionDate(session.startedAt))
+                .font(PreludeTypeScale.label())
+                .foregroundStyle(palette.secondary)
+            Text("·")
+                .font(PreludeTypeScale.label())
+                .foregroundStyle(palette.tertiary)
+            Circle()
+                .fill(Color.preludeEmotion(label))
+                .frame(width: 8, height: 8)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(PreludeTypeScale.label())
+                .foregroundStyle(Color.preludeEmotion(label))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(sessionDate(session.startedAt)), dominant emotion \(title)")
     }
 
     private struct CardItem {

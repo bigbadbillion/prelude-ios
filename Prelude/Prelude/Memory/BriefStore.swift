@@ -170,10 +170,10 @@ enum BriefStore {
         refineDominantEmotionIfWeak(session: session, brief: brief)
     }
 
-    /// Fallback when structured brief output (or live tag) did not set a **non-neutral** dominant: substring heuristic on brief text, then insight vote.
+    /// Fallback when structured brief output (or live tag) did not set a **non-calm** dominant: substring heuristic on brief text, then insight vote.
     private static func refineDominantEmotionIfWeak(session: Session, brief: SessionBrief) {
         let tag = session.dominantEmotion
-        guard tag == nil || tag == .neutral else { return }
+        guard tag == nil || tag == .calm else { return }
 
         let corpus = [
             brief.emotionalState,
@@ -181,12 +181,12 @@ enum BriefStore {
             brief.themes.joined(separator: " "),
             brief.focusItems.joined(separator: " "),
         ].joined(separator: "\n")
-        if let inferred = EmotionLabel.firstMentioned(in: corpus), inferred != .neutral {
+        if let inferred = EmotionLabel.firstMentioned(in: corpus), inferred != .calm {
             session.dominantEmotion = inferred
             return
         }
 
-        let votes = session.insights.map(\.emotion).filter { $0 != .neutral }
+        let votes = session.insights.map(\.emotion).filter { $0 != .calm }
         guard !votes.isEmpty else { return }
         let grouped = Dictionary(grouping: votes, by: { $0 })
         if let best = grouped.max(by: { $0.value.count < $1.value.count })?.key {
@@ -278,7 +278,7 @@ enum BriefStore {
         var lines: [String] = []
         let rawLog = session.userTranscriptLog.trimmingCharacters(in: .whitespacesAndNewlines)
         if rawLog.isEmpty {
-            lines.append("USER SPOKE: (no transcript captured — use only saved insights/cards below, or neutral minimal lines; do not invent struggles.)")
+            lines.append("USER SPOKE: (no transcript captured — use only saved insights/cards below, or plain minimal lines; do not invent struggles.)")
         } else {
             lines.append("USER SPOKE (verbatim, chronological — primary source of truth):")
             lines.append(rawLog)
@@ -401,7 +401,7 @@ enum BriefStore {
                     .map { trim($0, fallback: "") }
                     .filter { !$0.isEmpty }
                 let rawEmotion = trim(out.dominantEmotion, fallback: "").lowercased()
-                if let label = EmotionLabel(rawValue: rawEmotion) {
+                if let label = EmotionLabel.parseCanonicalKey(rawEmotion) {
                     dominantResolved = label
                 }
                 let shift = trim(out.emotionalShift, fallback: "")
@@ -473,14 +473,14 @@ enum BriefStore {
     private static func dominantEmotionVote(sessions: [Session]) -> EmotionLabel {
         var counts: [EmotionLabel: Int] = [:]
         for s in sessions {
-            if let d = s.dominantEmotion, d != .neutral {
+            if let d = s.dominantEmotion, d != .calm {
                 counts[d, default: 0] += 1
             }
-            for i in s.insights where i.emotion != .neutral {
+            for i in s.insights where i.emotion != .calm {
                 counts[i.emotion, default: 0] += 1
             }
         }
-        return counts.max(by: { $0.value < $1.value })?.key ?? .neutral
+        return counts.max(by: { $0.value < $1.value })?.key ?? .calm
     }
 
     private static func templateWeeklySummary(sessions: [Session]) -> String {

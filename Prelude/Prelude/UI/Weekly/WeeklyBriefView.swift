@@ -41,7 +41,6 @@ struct WeeklyBriefView: View {
     @ViewBuilder
     private func weeklyScrollContent(_ w: WeeklyBrief) -> some View {
         let arcSessions = SessionStore.sessionsForWeeklyEmotionalArc(sessionIds: w.sessionIds, in: modelContext)
-        let arcPlotSessions = EmotionalArcChartView.sessionsForArcPlot(arcSessions)
         let paragraphs = w.summary
             .split(separator: "\n\n")
             .map(String.init)
@@ -53,8 +52,8 @@ struct WeeklyBriefView: View {
                 .foregroundStyle(palette.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if arcPlotSessions.count >= 2 {
-                emotionalArcCard(sessions: arcPlotSessions)
+            if arcSessions.count >= 2 {
+                emotionalArcCard(sessions: arcSessions)
             }
 
             // Main narrative card

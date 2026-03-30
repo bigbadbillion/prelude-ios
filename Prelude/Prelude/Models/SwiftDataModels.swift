@@ -48,8 +48,8 @@ final class Session {
 
     var dominantEmotion: EmotionLabel? {
         get {
-            guard let r = dominantEmotionRaw else { return nil }
-            return EmotionLabel(rawValue: r)
+            guard let r = dominantEmotionRaw, !r.isEmpty else { return nil }
+            return EmotionLabel.parseCanonicalKey(r)
         }
         set { dominantEmotionRaw = newValue?.rawValue }
     }
@@ -94,7 +94,7 @@ final class Insight {
     }
 
     var emotion: EmotionLabel {
-        get { EmotionLabel(rawValue: emotionRaw) ?? .neutral }
+        get { EmotionLabel.parseCanonicalKey(emotionRaw) ?? .calm }
         set { emotionRaw = newValue.rawValue }
     }
 }
@@ -200,7 +200,7 @@ final class WeeklyBrief {
     }
 
     var dominantEmotion: EmotionLabel {
-        get { EmotionLabel(rawValue: dominantEmotionRaw) ?? .neutral }
+        get { EmotionLabel.parseCanonicalKey(dominantEmotionRaw) ?? .calm }
         set { dominantEmotionRaw = newValue.rawValue }
     }
 }

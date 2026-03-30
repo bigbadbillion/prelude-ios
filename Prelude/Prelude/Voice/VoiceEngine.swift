@@ -38,14 +38,32 @@ final class VoiceEngine: ObservableObject {
     private var silenceThresholdMs: Int = 800
     private var silenceWorkItem: DispatchWorkItem?
 
-    private var onUserTurnComplete: ((String) async -> (line: String?, endSessionAfter: Bool))?
+    /// First string is the **clean** user line for logs; second adds optional host context (e.g. barge-in) for the model only.
+    private var onUserTurnComplete: ((String, String) async -> (line: String?, endSessionAfter: Bool))?
     private var onSessionEnd: (() -> Void)?
     private var onLiveTranscriptScrollHint: (() -> Void)?
     private var onCrisis: (() -> Void)?
     private var endSessionAfterThisUtterance = false
 
+    /// After barge-in, `didFinish`/`didCancel` must not tear down STT that is still collecting the user’s interrupt.
+    private var suppressListenRestartAfterTTS = false
+    /// Prepended once to the next finalized user transcript so the agent knows audio was cut short.
+    private var pendingBargeInPreamble: String?
+
     private var scriptResponseIndex = 1
     private var isPaused = false
+
+    /// After we stop TTS due to barge-in, ignore ASR finals briefly.
+    /// This reduces "phantom words" caused by the stop transition / speaker bleed.
+    private var bargeInIgnoreUntil: Date?
+
+    /// Tracks whether the STT engine is currently capturing so we can avoid stop/start churn
+    /// (which can lead to audio render errors and session freezes).
+    private var isSpeechCapturing = false
+
+    /// Minimum characters in a partial transcript before we stop TTS (barge-in).
+    /// Kept relatively high to avoid canceling TTS on playback artifacts when ASR misfires.
+    private static let bargeInMinCharacters = 12
 
     /// Smoothed mic level (~PRD §10.5 — avoid twitchy motion).
     private var micSmoothed: Double = 0
@@ -68,6 +86,9 @@ final class VoiceEngine: ObservableObject {
             }
         }
         synthesizer.delegate = ttsDelegate
+        // Use the default system audio session for TTS to avoid fighting with the mic/STT audio graph.
+        // (The earlier duplex/AEC changes caused instability; this restores the prior stable split.)
+        synthesizer.usesApplicationAudioSession = false
         speech.onAmplitude = { [weak self] v in
             Task { @MainActor in
                 self?.applyMicAmplitude(v)
@@ -141,7 +162,7 @@ final class VoiceEngine: ObservableObject {
 
     func configure(
         silenceThresholdMs: Int = 800,
-        onUserTurnComplete: @escaping (String) async -> (line: String?, endSessionAfter: Bool),
+        onUserTurnComplete: @escaping (String, String) async -> (line: String?, endSessionAfter: Bool),
         onSessionEnd: @escaping () -> Void,
         onLiveTranscript: (() -> Void)? = nil,
         onCrisis: (() -> Void)? = nil
@@ -176,10 +197,12 @@ final class VoiceEngine: ObservableObject {
     func pause() {
         isPaused = true
         speech.stopCapturing()
+        isSpeechCapturing = false
         synthesizer.pauseSpeaking(at: .word)
         voiceState = .paused
         cancelSilenceTimer()
         invalidateTTSTimer()
+        bargeInIgnoreUntil = nil
     }
 
     func resume() {
@@ -198,6 +221,7 @@ final class VoiceEngine: ObservableObject {
         cancelSilenceTimer()
         invalidateTTSTimer()
         speech.stopCapturing()
+        isSpeechCapturing = false
         synthesizer.stopSpeaking(at: .immediate)
         voiceState = .ended
         errorMessage = nil
@@ -205,20 +229,52 @@ final class VoiceEngine: ObservableObject {
         agentSpeechEnvelope = 0
         amplitude = 0
         micSmoothed = 0
+        suppressListenRestartAfterTTS = false
+        pendingBargeInPreamble = nil
+        bargeInIgnoreUntil = nil
     }
 
     private func speak(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        // Prevent stale STT errors from showing the mic overlay during agent speech.
+        errorMessage = nil
         resetPresenceLevelsForSpeaking()
         let u = AVSpeechUtterance(string: trimmed)
         PreludeTTS.configure(u)
+        // Duplex barge-in (mic while TTS speaks) is disabled during the recovery path.
+        // We return to the stable behavior: start listening after TTS finishes.
+        isSpeechCapturing = false
+        bargeInIgnoreUntil = nil
+        pendingBargeInPreamble = nil
+        suppressListenRestartAfterTTS = false
         synthesizer.speak(u)
+    }
+
+    /// Duplex barge-in path (disabled in recovery mode).
+    private func runDuplexSpeak(utterance: AVSpeechUtterance) {
+        // Keep method for future re-enabling, but do not start STT here.
+        synthesizer.speak(utterance)
     }
 
     private func agentDidFinishSpeaking() async {
         guard !isPaused else { return }
         if voiceState == .ended { return }
+
+        // Barge-in can trigger `didCancel`/`didFinish` delegate callbacks even after we already
+        // transitioned into `.listening`. In that case, tearing down STT here makes the session
+        // feel frozen and causes missing transcripts.
+        if voiceState == .listening {
+            suppressListenRestartAfterTTS = false
+            return
+        }
+
+        if suppressListenRestartAfterTTS {
+            suppressListenRestartAfterTTS = false
+            resetPresenceLevelsAfterSpeaking()
+            return
+        }
+
         resetPresenceLevelsAfterSpeaking()
         if endSessionAfterThisUtterance {
             endSessionAfterThisUtterance = false
@@ -226,6 +282,20 @@ final class VoiceEngine: ObservableObject {
             onSessionEnd?()
             return
         }
+        // In duplex mode we might already have STT capturing running. Restarting it here can
+        // cause audio render errors and "freezes", so only stop/restart when needed.
+        if isSpeechCapturing {
+            bargeInIgnoreUntil = nil
+            voiceState = .listening
+            liveTranscript = ""
+            cancelSilenceTimer()
+            micSmoothed = 0
+            amplitude = 0
+            return
+        }
+
+        speech.stopCapturing()
+        isSpeechCapturing = false
         await beginListening()
     }
 
@@ -264,19 +334,30 @@ final class VoiceEngine: ObservableObject {
         guard !isPaused else { return }
         voiceState = .listening
         liveTranscript = ""
+        errorMessage = nil
+        bargeInIgnoreUntil = nil
         cancelSilenceTimer()
         micSmoothed = 0
         amplitude = 0
 
         do {
-            try speech.startCapturing { [weak self] text, isFinal in
-                Task { @MainActor in
-                    self?.handlePartial(text: text, isFinal: isFinal)
+            try speech.startCapturing(
+                onPartial: { [weak self] text, isFinal in
+                    Task { @MainActor in
+                        self?.handleSpeechPartial(text: text, isFinal: isFinal)
+                    }
+                },
+                onError: { [weak self] error in
+                    Task { @MainActor in
+                        self?.handleSTTError(error)
+                    }
                 }
-            }
+            )
+            isSpeechCapturing = true
         } catch {
             errorMessage = error.localizedDescription
             voiceState = .idle
+            isSpeechCapturing = false
 
             // On iOS Simulator, audio capture is intentionally unavailable (see SpeechRecognizerService).
             // For UI testing, advance the scripted conversation so the session doesn't feel "frozen".
@@ -289,7 +370,56 @@ final class VoiceEngine: ObservableObject {
         }
     }
 
-    private func handlePartial(text: String, isFinal: Bool) {
+    private func handleSTTError(_ error: Error) {
+        // STT can emit late errors during our own stopCapturing() call
+        // when we are already transitioning into `.processing`/`.speaking`.
+        // In that case, don't clobber the UI or tear down the turn.
+        guard voiceState == .listening || voiceState == .idle else { return }
+
+        // Keep this path user-visible so TestFlight testers can recover.
+        errorMessage = "Speech recognition error. Please tap Try again."
+        voiceState = .idle
+        cancelSilenceTimer()
+        pendingBargeInPreamble = nil
+        bargeInIgnoreUntil = nil
+        isSpeechCapturing = false
+        speech.stopCapturing()
+    }
+
+    private func handleSpeechPartial(text: String, isFinal: Bool) {
+        if voiceState == .speaking {
+            liveTranscript = text
+            onLiveTranscriptScrollHint?()
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Barge-in is error-prone when ASR hears speaker/room bleed.
+            // Only barge-in on a final segment reduces phantom cutoffs.
+            let shouldBargeIn = isFinal && trimmed.count >= Self.bargeInMinCharacters
+
+            if shouldBargeIn {
+                suppressListenRestartAfterTTS = true
+                pendingBargeInPreamble = "(They spoke over your last line.) "
+                synthesizer.stopSpeaking(at: .immediate)
+                voiceState = .listening
+                bargeInIgnoreUntil = Date().addingTimeInterval(0.35)
+                cancelSilenceTimer()
+                micSmoothed = 0
+                amplitude = 0
+                liveTranscript = ""
+            }
+            return
+        }
+
+        guard voiceState == .listening else { return }
+
+        if let until = bargeInIgnoreUntil, Date() < until {
+            // Ignore ASR "finals" temporarily right after barge-in to avoid phantom words.
+            // We still update UI so the user sees recognition progressing.
+            liveTranscript = text
+            onLiveTranscriptScrollHint?()
+            cancelSilenceTimer()
+            return
+        }
+
         liveTranscript = text
         onLiveTranscriptScrollHint?()
         cancelSilenceTimer()
@@ -317,21 +447,34 @@ final class VoiceEngine: ObservableObject {
 
     private func finalizeUserTurn(transcript: String) async {
         cancelSilenceTimer()
+        // Set state early so any late STT errors from our own stopCapturing()
+        // don't flip the UI back to `.idle` (which triggers the mic-unavailable overlay).
+        errorMessage = nil
+        voiceState = .processing
         speech.stopCapturing()
+        isSpeechCapturing = false
+        bargeInIgnoreUntil = nil
 
-        let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+        let raw = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        let agentPayload: String
+        if let pre = pendingBargeInPreamble {
+            agentPayload = pre + raw
+            pendingBargeInPreamble = nil
+        } else {
+            agentPayload = raw
+        }
+        guard !raw.isEmpty else {
+            pendingBargeInPreamble = nil
             await beginListening()
             return
         }
 
-        transcriptLines.append(trimmed)
+        transcriptLines.append(raw)
         onLiveTranscriptScrollHint?()
-        voiceState = .processing
         micSmoothed = 0
         amplitude = 0
 
-        if CrisisDetection.indicatesCrisis(trimmed) {
+        if CrisisDetection.indicatesCrisis(raw) {
             onCrisis?()
             let line = CrisisDetection.spokenAcknowledgment
             agentText = line
@@ -344,7 +487,7 @@ final class VoiceEngine: ObservableObject {
         let nextLine: String?
         let endAfter: Bool
         if let cb = onUserTurnComplete {
-            let result = await cb(trimmed)
+            let result = await cb(raw, agentPayload)
             nextLine = result.line
             endAfter = result.endSessionAfter
         } else {

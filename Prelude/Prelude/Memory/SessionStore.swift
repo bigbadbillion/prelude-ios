@@ -43,6 +43,61 @@ enum SessionStore {
         return ca.yearForWeekOfYear == cb.yearForWeekOfYear && ca.weekOfYear == cb.weekOfYear
     }
 
+    /// Compact text for the **opening** model prompt: last completed session + optional cross-session theme (on-device FM).
+    @MainActor
+    static func previousSessionOpeningContext(in modelContext: ModelContext) -> String? {
+        let completed = completedSessionsChronological(in: modelContext)
+        guard let previous = completed.last else { return nil }
+
+        var parts: [String] = []
+        let df = DateFormatter()
+        df.dateStyle = .medium
+        df.timeStyle = .none
+        if let ended = previous.completedAt {
+            parts.append("Previous reflection ended \(df.string(from: ended)).")
+        }
+
+        if let brief = previous.brief {
+            let em = brief.emotionalState.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !em.isEmpty { parts.append("Emotional tone then: \(em).") }
+            let th = Array(brief.themes.prefix(4)).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            if !th.isEmpty {
+                parts.append("Themes: \(th.joined(separator: "; ")).")
+            }
+            let pw = brief.patientWords.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !pw.isEmpty {
+                let clip = String(pw.prefix(220))
+                parts.append("Line they wanted to bring to therapy: \(clip)\(pw.count > 220 ? "…" : "")")
+            }
+        } else {
+            if let em = previous.dominantEmotion {
+                parts.append("Tagged tone then: \(em.rawValue).")
+            }
+            let log = previous.userTranscriptLog.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !log.isEmpty {
+                let clip = String(log.prefix(260))
+                parts.append("They spoke about: \(clip)\(log.count > 260 ? "…" : "")")
+            }
+        }
+
+        if completed.count >= 2 {
+            let recent = Array(completed.suffix(6))
+            let ranked = PatternDetector.recurringThemes(from: recent, includeBriefThemes: true)
+            if let top = ranked.first {
+                let nt = PatternDetector.normalizeTheme(top)
+                let hit = recent.filter { s in
+                    PatternDetector.themeStrings(from: s, includeBriefThemes: true).contains(nt)
+                }.count
+                if hit >= 2 {
+                    parts.append("Pattern across recent reflections: “\(top)” has come up more than once.")
+                }
+            }
+        }
+
+        let joined = parts.joined(separator: " ")
+        return joined.isEmpty ? nil : joined
+    }
+
     /// Sessions referenced by a weekly brief’s `sessionIds`, completed with a dominant emotion tag, oldest→newest, max six (Expo weekly emotional arc).
     @MainActor
     static func sessionsForWeeklyEmotionalArc(sessionIds idStrings: [String], in modelContext: ModelContext) -> [Session] {

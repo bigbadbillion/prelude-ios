@@ -11,7 +11,9 @@ final class AgentController: ObservableObject {
     private static let script: [String] = VoiceEngineScript.lines
 
     private var scriptIndex = 1
-    private var modelTurnCount = 0
+
+    /// User-grounded metrics for `ConversationPhasePolicy` (not agent reply count).
+    private var sessionTurnMetrics = SessionTurnMetrics()
 
     /// Type-erased **LanguageModelSession** when Foundation Models is linked (`#if canImport` callers cast).
     var foundationSessionStorage: Any?
@@ -40,7 +42,7 @@ final class AgentController: ObservableObject {
 
     func resetForNewSession() {
         scriptIndex = 1
-        modelTurnCount = 0
+        sessionTurnMetrics = SessionTurnMetrics()
         currentPhase = .warmOpen
         foundationSessionStorage = nil
         foundationSessionUsesTools = nil
@@ -67,12 +69,20 @@ final class AgentController: ObservableObject {
     }
 
     /// Voice layer entry: structured line + whether to end the session after this agent speech (e.g. model `endSession`).
+    /// - `userUtteranceForModel`: text sent to FM (may include a short barge-in preamble).
+    /// - `rawTranscriptLine`: user’s words only — phase metrics, signals, and SwiftData transcript should align with this.
     func respondToUserTurn(
-        userUtterance: String,
+        userUtteranceForModel: String,
+        rawTranscriptLine: String,
         modelContext: ModelContext,
         session: Session
     ) async -> (line: String?, endSessionAfter: Bool) {
-        if let decision = await streamDecision(userUtterance: userUtterance, modelContext: modelContext, session: session) {
+        if let decision = await streamDecision(
+            userUtteranceForModel: userUtteranceForModel,
+            rawTranscriptLine: rawTranscriptLine,
+            modelContext: modelContext,
+            session: session
+        ) {
             let end = decision.action == .endSession
             let trimmed = decision.spokenResponse.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.isEmpty {
@@ -116,39 +126,42 @@ final class AgentController: ObservableObject {
         }
     }
 
-    /// True when per-turn prompts should steer toward an audible **session recap** (readBack or the turn right before phase flips to readBack).
+    /// True when per-turn prompts should steer toward an audible **whole-session** recap (readBack only).
+    /// Previously we also steered during late `excavation`, which made the model mirror the **latest** turn
+    /// instead of synthesizing the full conversation — recap belongs strictly in `readBack`.
     var shouldSteerTowardSessionRecapInPrompt: Bool {
-        if currentPhase == .readBack { return true }
-        if currentPhase == .excavation, modelTurnCount >= 5 { return true }
-        return false
+        currentPhase == .readBack
     }
 
-    /// Maps free-model actions into **ConversationPhase** for SwiftData + UI (coarse; model also receives phase in prompt).
-    func applyModelPhaseTransition(for action: AgentAction) {
-        modelTurnCount += 1
-        switch action {
-        case .readBackSummary:
-            currentPhase = .readBack
-        case .endSession:
-            currentPhase = .closing
-        default:
-            switch modelTurnCount {
-            case ..<2: currentPhase = .warmOpen
-            case 2 ..< 4: currentPhase = .openField
-            case 4 ..< 6: currentPhase = .excavation
-            case 6 ..< 8: currentPhase = .readBack
-            default: currentPhase = .closing
-            }
-        }
+    /// Updates phase from **user utterance**, session memory (saved insights), and model `action` — not turn counts.
+    func applyPhaseAfterAgentTurn(userUtterance: String, session: Session, modelAction: AgentAction) {
+        currentPhase = ConversationPhasePolicy.resolvePhase(
+            current: currentPhase,
+            userUtterance: userUtterance,
+            metrics: sessionTurnMetrics,
+            savedInsightCount: session.insights.count,
+            modelAction: modelAction
+        )
     }
 
-    func streamDecision(userUtterance: String, modelContext: ModelContext, session: Session) async -> AgentDecision? {
+    /// Records the user’s words for metrics **before** phase resolution (same user turn).
+    func recordUserTurnMetricsOnly(_ userUtterance: String) {
+        sessionTurnMetrics.recordUserUtterance(userUtterance)
+    }
+
+    func streamDecision(
+        userUtteranceForModel: String,
+        rawTranscriptLine: String,
+        modelContext: ModelContext,
+        session: Session
+    ) async -> AgentDecision? {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
             guard let box = toolContextBox else { return nil }
             return await PreludeFoundationModels.runTurn(
                 agent: self,
-                userUtterance: userUtterance,
+                userUtteranceForModel: userUtteranceForModel,
+                rawTranscriptLine: rawTranscriptLine,
                 modelContext: modelContext,
                 session: session,
                 box: box
