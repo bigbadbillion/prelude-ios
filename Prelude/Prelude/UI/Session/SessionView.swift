@@ -29,14 +29,14 @@ struct SessionView: View {
                 let h = geo.size.height
                 VStack(spacing: 0) {
                     Spacer()
-                        .frame(height: h * 0.06)
+                        .frame(height: h * 0.04)
                     PresenceShapeView(
                         voiceState: voice.voiceState,
                         size: min(260, geo.size.width * 0.65),
                         amplitude: CGFloat(voice.amplitude)
                     )
-                    .frame(height: h * 0.48)
-                    VStack(alignment: .leading, spacing: 16) {
+                    .frame(height: h * 0.38)
+                    VStack(alignment: .leading, spacing: 12) {
                         Text(voice.agentText)
                             .font(PreludeTypeScale.cardBody())
                             .foregroundStyle(palette.primary)
@@ -61,7 +61,7 @@ struct SessionView: View {
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .frame(maxHeight: min(140, h * 0.18))
+                            .frame(maxHeight: .infinity)
                             .onChange(of: transcriptScrollNonce) { _, _ in
                                 Task { @MainActor in
                                     await Task.yield()
@@ -73,45 +73,50 @@ struct SessionView: View {
                         }
                     }
                     .padding(.horizontal, 24)
-                    .frame(height: h * 0.28, alignment: .top)
-
-                HStack {
-                    Button("Pause") {
-                        if voice.voiceState == .paused {
-                            voice.resume()
-                        } else {
-                            voice.pause()
-                        }
-                    }
-                    .font(PreludeTypeScale.label())
-                    .foregroundStyle(palette.secondary)
-                    Spacer()
-                    Button("End") {
-                        guard let sid = sessionID else { return }
-                        if let s = SessionStore.session(id: sid, in: context) {
-                            let live = voice.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
-                            if !live.isEmpty {
-                                s.appendUserTurn(live)
-                            }
-                            try? context.save()
-                        }
-                        voice.end()
-                        Task { await finalizeSession(sessionId: sid) }
-                    }
-                    .font(PreludeTypeScale.label())
-                    .foregroundStyle(palette.amber)
-                    Spacer()
-                    Button {
-                        showHelpSheet = true
-                    } label: {
-                        Image(systemName: "questionmark.circle")
-                            .foregroundStyle(palette.tertiary)
-                    }
-                    .accessibilityLabel("Crisis and help resources")
+                    .padding(.bottom, 8)
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
-                .padding(.horizontal, 28)
-                .padding(.bottom, 28)
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    HStack {
+                        Button("Pause") {
+                            if voice.voiceState == .paused {
+                                voice.resume()
+                            } else {
+                                voice.pause()
+                            }
+                        }
+                        .font(PreludeTypeScale.label())
+                        .foregroundStyle(palette.secondary)
+                        Spacer()
+                        Button("End") {
+                            guard let sid = sessionID else { return }
+                            if let s = SessionStore.session(id: sid, in: context) {
+                                let live = voice.liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !live.isEmpty {
+                                    s.appendUserTurn(live)
+                                }
+                                try? context.save()
+                            }
+                            voice.end()
+                            Task { await finalizeSession(sessionId: sid) }
+                        }
+                        .font(PreludeTypeScale.label())
+                        .foregroundStyle(palette.amber)
+                        Spacer()
+                        Button {
+                            showHelpSheet = true
+                        } label: {
+                            Image(systemName: "questionmark.circle")
+                                .foregroundStyle(palette.tertiary)
+                        }
+                        .accessibilityLabel("Crisis and help resources")
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.top, 12)
+                    .padding(.bottom, 16)
+                    .frame(maxWidth: .infinity)
+                    .background(palette.depth)
                 }
             }
         }

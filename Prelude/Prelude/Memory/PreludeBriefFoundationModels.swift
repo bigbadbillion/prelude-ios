@@ -20,6 +20,9 @@ struct GenerableSessionBriefOut {
     @Guide(description: "Second theme if any, distinct from themeMain; otherwise empty string.")
     var themeSecondary: String
 
+    @Guide(description: "Third emotional weight line, distinct from themeMain and themeSecondary; otherwise empty.")
+    var themeTertiary: String
+
     @Guide(
         description: """
             **Only field** that may closely match the user’s voice: one salient line for therapy \
@@ -28,14 +31,17 @@ struct GenerableSessionBriefOut {
     )
     var patientWords: String
 
-    @Guide(description: "Key emotional quality or thread — short **inferred** label, not a USER SPOKE clip.")
+    @Guide(description: "Key emotional quality — short **inferred** label, not a USER SPOKE clip.")
     var focus1: String
 
-    @Guide(description: "Second focus; empty if none — **new** wording, not another quote.")
+    @Guide(description: "Unresolved thread or tension — **new** wording, not a quote; empty if none.")
     var focus2: String
 
-    @Guide(description: "Third focus (e.g. goal for the hour); empty if none — inferred.")
+    @Guide(description: "First hope for this therapy hour (clarity, pacing, being seen, etc.); empty if none — inferred.")
     var focus3: String
+
+    @Guide(description: "Second distinct hope for the hour; empty if none — must differ from the first when both set.")
+    var focus4: String
 
     @Guide(description: "Cross-session pattern only if prompt supplies one that fits; else empty. Never paste USER SPOKE.")
     var patternNote: String
@@ -85,8 +91,9 @@ enum PreludeBriefFoundationModels {
                 Fallback brief writer (no tools). Build a therapy-prep brief from USER SPOKE and saved material.
 
                 **Only patientWords** may echo the user’s voice in one tight carry line (≤~280 characters, not the full log).
-                emotionalState, themeMain, themeSecondary, focus1–3, patternNote: **synthesize** — do **not** copy sentences \
-                from USER SPOKE. patternNote: empty unless a cross-session pattern is given in the prompt and clearly fits.
+                emotionalState, themeMain, themeSecondary, themeTertiary, focus1–4, patternNote: **synthesize** — do **not** copy sentences \
+                from USER SPOKE. Provide up to **three** distinct weighing themes and **two** distinct hopes (focus3, focus4) when the session supports them. \
+                patternNote: empty unless a cross-session pattern is given in the prompt and clearly fits.
                 Stay faithful to tone (e.g. good day → lighter). No clinical diagnosis. Unused string fields: empty. \
                 dominantEmotionKey: set when confident; otherwise omit.
                 """

@@ -390,9 +390,10 @@ enum PreludeFoundationModels {
 
         await MainActor.run { box.session = session }
 
-        let phaseLabel = await MainActor.run { agent.currentPhase.rawValue }
-        let phase = await MainActor.run { agent.currentPhase }
-        let recapHint = await MainActor.run { agent.shouldSteerTowardSessionRecapInPrompt }
+        let (phaseLabel, phaseForPrompt, recapHint) = await MainActor.run {
+            let eff = agent.effectivePhaseForIncomingTurn(rawTranscriptLine: rawTranscriptLine, session: session)
+            return (eff.rawValue, eff, eff == .readBack)
+        }
         let sessionTranscriptBlock = await MainActor.run {
             Self.truncatedTranscriptForReadBack(session.userTranscriptLog)
         }
@@ -403,11 +404,6 @@ enum PreludeFoundationModels {
             Respond with structured output: action (one of respond, askQuestion, saveInsight, reflectBack, readBackSummary, endSession), \
             spokenResponse for TTS, reasoning (may be brief). Use tools when helpful.
             """
-            """
-            If the user shared anything substantive, spokenResponse should **end with one gentle open question** \
-            that deepens reflection (prefer action askQuestion). Skip the question only for minimal greetings, \
-            safety/crisis, or a clear closing/read-back check-in as appropriate for the phase.
-            """
             if recapHint {
                 """
                 Session transcript (user’s words, chronological — this is the **whole arc** so far):
@@ -416,11 +412,18 @@ enum PreludeFoundationModels {
                 """
                 Phase note — read-back: spokenResponse must **synthesize across the transcript above** (themes, feelings, what matters for therapy) — \
                 **not** paraphrase only the latest turn. One short natural paragraph, then invite them to add more or confirm it’s enough. \
-                Prefer action **readBackSummary** when that recap is the main move.
+                Prefer action **readBackSummary** when that recap is the main move. A single light check-in (e.g. whether that feels close) is fine; \
+                do **not** add a separate deep exploratory question — recap and confirmation are the priority.
                 """
-            } else if phase == .closing {
+            } else if phaseForPrompt == .closing {
                 """
                 Phase note — closing: warm, brief gratitude or encouragement; no new deep questions unless they are still adding something important.
+                """
+            } else {
+                """
+                If the user shared anything substantive, spokenResponse should **end with one gentle open question** \
+                that deepens reflection (prefer action askQuestion). Skip the question only for minimal greetings, \
+                safety/crisis, or a clear closing/read-back check-in as appropriate for the phase.
                 """
             }
         }

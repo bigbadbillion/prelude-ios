@@ -13,7 +13,7 @@
 | Platform | iOS 26+ / iPhone with Apple Intelligence |
 | Minimum Device | iPhone 15 Pro (A17 Pro) |
 | AI Runtime | Foundation Models (on-device, zero API cost) |
-| Last Updated | March 30, 2026 (phase policy + barge-in recovery) |
+| Last Updated | March 31, 2026 (Settings: compact model label, appearance, contact support) |
 | Build Status | 🟡 In Progress — Phase 5 polish (presence + accessibility + App Store) |
 
 ---
@@ -77,11 +77,11 @@
 ### Phase 5 — Availability & Polish 🟡
 - [x] ModelAvailabilityState guard pattern on every session start — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Home/HomeView.swift
 - [x] User-facing availability states (warm copy, not error messages) — **Files:** Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/UI/Onboarding/OnboardingView.swift
-- [x] Settings — Apple Intelligence / on-device model status, diagnostics line, Refresh, Danger “clear all data” — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/App/UserSettings.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Root/RootView.swift, Prelude/Prelude/App/PreludeHaptics.swift
+- [x] Settings — Apple Intelligence row (compact on-device vs scripted label only), Appearance (system / light / dark), medical disclaimer + crisis line + mailto support, Danger “clear all data” — **Files:** Prelude/Prelude/UI/Settings/SettingsView.swift, Prelude/Prelude/App/ModelAvailabilityState.swift, Prelude/Prelude/Memory/MemoryStore.swift, Prelude/Prelude/App/UserSettings.swift, Prelude/Prelude/App/AppState.swift, Prelude/Prelude/UI/Root/RootView.swift, Prelude/Prelude/App/PreludeApp.swift, Prelude/Prelude/App/PreludeHaptics.swift
 - [x] Presence — ambient breath + dual reactivity (mic smoothing while listening; TTS `willSpeakRange` envelope while agent speaks; prelude-ios §10.5) — **Files:** Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/PresenceShapeView.swift
 - [x] Session read-back recap (gathered themes / invitation to add or confirm) + live transcript autoscroll — **Files:** Prelude/Prelude/Agent/PreludeAgentPrompts.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/UI/Session/SessionView.swift, PRELUDE_PRD.md, prelude-ios-prd.md
 - [x] Agent continuity + read-back grounding — opening uses **Settings name** + **last completed session** context (brief or transcript clip) + optional **cross-session theme**; read-back prompts include **full `userTranscriptLog`** and recap steering **only in `readBack`** (not late excavation); prompts discourage repetitive “it sounds like…” — **Files:** Prelude/Prelude/Memory/SessionStore.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/PreludeAgentPrompts.swift, PRELUDE_PRD.md
-- [ ] Conversation phase coordination (user-grounded) + voice barge-in — **deterministic policy** (`ConversationPhasePolicy`): cumulative user words, substantive turns, saved insights, English wrap/end phrases, validated `readBackSummary` / `endSession`; **no turn-count phase buckets** on device. **Voice interruption (barge-in)**: temporarily disabled in the last stability recovery build to avoid `AVAudioEngine` render/stall issues; will be re-enabled after duplex capture/AEC behavior is locked down. — **Files:** Prelude/Prelude/Agent/ConversationPhasePolicy.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/Voice/SpeechRecognizerService.swift, Prelude/Prelude/UI/Session/SessionView.swift, Prelude/PreludeTests/ConversationPhasePolicyTests.swift, Prelude/scripts/generate_xcode_project.py, Prelude/Prelude.xcodeproj/project.pbxproj, PRELUDE_PRD.md
+- [ ] Conversation phase coordination (user-grounded) + voice barge-in — **deterministic policy** (`ConversationPhasePolicy`): cumulative user words, substantive turns, saved insights, English wrap/end phrases, validated `readBackSummary` / `endSession`; **host promotion** `excavation` → `readBack` when read-back is allowed and depth/time thresholds are met (~8 min elapsed, word/substantive-turn caps, or 2+ insights); per-turn FM prompt uses **effective phase** for the incoming user line. **No turn-count phase buckets** on device. **Voice interruption (barge-in)**: temporarily disabled in the last stability recovery build to avoid `AVAudioEngine` render/stall issues; will be re-enabled after duplex capture/AEC behavior is locked down. — **Files:** Prelude/Prelude/Agent/ConversationPhasePolicy.swift, Prelude/Prelude/Agent/AgentController.swift, Prelude/Prelude/Agent/FoundationModelsIntegration.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/Voice/SpeechRecognizerService.swift, Prelude/Prelude/UI/Session/SessionView.swift, Prelude/PreludeTests/ConversationPhasePolicyTests.swift, Prelude/scripts/generate_xcode_project.py, Prelude/Prelude.xcodeproj/project.pbxproj, PRELUDE_PRD.md, prelude-ios-prd.md
 - [x] TTS — Premium/Enhanced voice asset prefetch on launch + first-session wait sheet (indeterminate; no OS download %) + `usesApplicationAudioSession = false` for TTS vs mic/Siri routing — **Files:** Prelude/Prelude/Voice/TTS.swift, Prelude/Prelude/Voice/VoiceEngine.swift, Prelude/Prelude/App/PreludeApp.swift, Prelude/Prelude/UI/Home/HomeView.swift, Prelude/Prelude/UI/Home/PremiumVoiceWaitSheet.swift, Prelude/PreludeTests/PreludeTTSPrefetchTests.swift, Prelude/scripts/generate_xcode_project.py, Prelude/Prelude.xcodeproj/project.pbxproj
 - [ ] Dynamic Type support
 - [ ] VoiceOver labels on custom shapes
@@ -204,7 +204,7 @@ Generated after every session. **Dedicated brief agent:** a separate on-device *
 
 **Voice / synthesis rules (product + enforcement):**
 - **Only `what_to_say`** (persisted as `SessionBrief.patientWords`, UI: **WHAT I NEED TO SAY**) should read like the user’s **own line to speak** — one **distilled** first-person carry sentence (about two short sentences max, ~280 characters). **`BriefPatientWordsNormalizer`** caps length and strips full-transcript dumps.
-- **All other sections are synthesized therapy-prep copy** — warm first person where natural, but **not** sentences copied from USER SPOKE. That includes **weighing_on_me** (WEIGHING ON ME): a **short summary of the emotional weight**, not a verbatim quote. Cards should **not** repeat the same idea across fields.
+- **All other sections are synthesized therapy-prep copy** — warm first person where natural, but **not** sentences copied from USER SPOKE. That includes the three **weighing** slots (`weighing_on_me`, `secondary_theme`, `tertiary_theme`; UI: **WEIGHING ON ME** ×3): **short summaries of emotional weight**, not verbatim quotes. Cards should **not** repeat the same idea across fields.
 - **`pattern_note`**: only when a **cross-session pattern** from **`PatternDetector`** clearly fits this session; otherwise omit. Never paste transcript lines into the pattern card.
 - **`emotional_read`**: short **affective read** of the brief the model wrote (tone, tension, hope — not diagnosis), UI: “How this brief reads.”
 
@@ -214,14 +214,15 @@ Generated after every session. **Dedicated brief agent:** a separate on-device *
 
 **Session brief screen:** Under “Session Brief,” the date row includes **`EmotionLabel.resolved(for:)`** (same rules as the weekly arc): one capitalized label plus a small emotion-colored dot beside the date.
 
-**Fallback order:** brief agent → single-shot **`GenerableSessionBriefOut`** (same voice rules in instructions) → card/insight template assembly. **Five to seven structured cards** covering:
+**Fallback order:** brief agent → single-shot **`GenerableSessionBriefOut`** (same voice rules in instructions) → card/insight template assembly. **Roughly eight to twelve structured cards** (varies if pattern is omitted) covering:
 1. How I showed up today (emotional state)
-2. The thing that's really weighing on me
+2. Three things weighing on me (three distinct synthesized lines)
 3. Key emotion underneath it
 4. What I want to make sure I say
 5. An unresolved thread worth exploring
-6. What I'm hoping therapy helps with today
+6. Two things I hope for from therapy today (two distinct synthesized lines)
 7. Pattern note (if the same recurring **theme** appears across **3+ consecutive** completed sessions — chronological; see prelude-ios-prd Phase 4.6)
+8. How this brief reads (affective read), when filled
 
 ### F5 — Session History & Emotional Patterns
 - Chronological list of past sessions with brief previews
@@ -703,7 +704,7 @@ Prelude/
 | Risk | Mitigation |
 |---|---|
 | On-device model not available in Simulator | `PreludeModelAvailability.shouldAttemptFoundationModels` is false on Simulator; session uses the scripted fallback. Test Apple Intelligence paths on a physical device with iOS 26+. |
-| `SystemLanguageModel` reports available but `respond` still fails | See **§15** (tool-free opening, turn retry without tools, lenient action mapping, console logging). Settings shows live vs scripted + diagnostics string. |
+| `SystemLanguageModel` reports available but `respond` still fails | See **§15** (tool-free opening, turn retry without tools, lenient action mapping, console logging). Settings shows a compact live vs scripted label; use Xcode console while debugging. |
 | Strict `@Generable` / `action` strings from the model | Use **lenient** mapping to `AgentAction` and require non-empty `spokenResponse`; do not discard a good utterance because `action` ≠ exact `rawValue`. |
 | Audio / STT errors (`AURemoteIO`, zero buffer size) | Separate from model availability; tune **AVAudioSession** and capture path (`SpeechRecognizerService`). Model can work while mic pipeline is flaky. |
 | Foundation Models API changes before iOS 26 release | Follow WWDC session notes, use availability guards |

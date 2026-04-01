@@ -92,16 +92,27 @@ enum BriefStore {
                         patternHint: hint
                     )
                     if !sec.isEmpty { th.append(sec) }
+                    let tert = BriefDraftSanitizer.sanitize(
+                        sectionKey: "tertiary_theme",
+                        text: trim(out.themeTertiary, fallback: ""),
+                        userTranscriptLog: log,
+                        patternHint: hint
+                    )
+                    if !tert.isEmpty { th.append(tert) }
                     themes = th
                     patientWords = BriefPatientWordsNormalizer.normalize(
                         trim(out.patientWords, fallback: ""),
                         userTranscriptLog: log
                     )
-                    let focusKeys = ["key_emotion", "unresolved_thread", "therapy_goal"]
-                    focusItems = [out.focus1, out.focus2, out.focus3].enumerated().compactMap { i, raw in
+                    let focusPairs: [(String, String)] = [
+                        ("key_emotion", out.focus1),
+                        ("unresolved_thread", out.focus2),
+                        ("therapy_goal", out.focus3),
+                        ("therapy_goal_2", out.focus4),
+                    ]
+                    focusItems = focusPairs.compactMap { key, raw in
                         let t = trim(raw, fallback: "")
                         guard !t.isEmpty else { return nil }
-                        let key = focusKeys[min(i, focusKeys.count - 1)]
                         let c = BriefDraftSanitizer.sanitize(
                             sectionKey: key,
                             text: t,
@@ -217,11 +228,13 @@ enum BriefStore {
         let es = cleaned("emotional_state", draft.sections["emotional_state"])
         let weighing = cleaned("weighing_on_me", draft.sections["weighing_on_me"])
         let secondary = cleaned("secondary_theme", draft.sections["secondary_theme"])
+        let tertiary = cleaned("tertiary_theme", draft.sections["tertiary_theme"])
         let keyEm = cleaned("key_emotion", draft.sections["key_emotion"])
         var whatToSay = (draft.sections["what_to_say"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         whatToSay = BriefPatientWordsNormalizer.normalize(whatToSay, userTranscriptLog: log)
         let thread = cleaned("unresolved_thread", draft.sections["unresolved_thread"])
         let goal = cleaned("therapy_goal", draft.sections["therapy_goal"])
+        let goal2 = cleaned("therapy_goal_2", draft.sections["therapy_goal_2"])
         let patternFromModel = cleaned("pattern_note", draft.sections["pattern_note"])
         let affective = cleaned("emotional_read", draft.sections["emotional_read"])
 
@@ -231,11 +244,15 @@ enum BriefStore {
         if !secondary.isEmpty {
             themes.append(secondary)
         }
+        if !tertiary.isEmpty {
+            themes.append(tertiary)
+        }
 
         var focusItems: [String] = []
         if !keyEm.isEmpty { focusItems.append(keyEm) }
         if !thread.isEmpty { focusItems.append(thread) }
         if !goal.isEmpty { focusItems.append(goal) }
+        if !goal2.isEmpty { focusItems.append(goal2) }
 
         let resolvedPattern: String?
         if !patternFromModel.isEmpty {
@@ -322,7 +339,9 @@ enum BriefStore {
         var emotionalState = "Present and reflecting"
         var themes: [String] = []
         var patientWords = ""
-        var focusItems: [String] = []
+        var keyEmotionLines: [String] = []
+        var unresolvedLines: [String] = []
+        var therapyGoalLines: [String] = []
 
         for c in session.cards.sorted(by: { $0.id.uuidString < $1.id.uuidString }) {
             let t = c.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -331,20 +350,31 @@ enum BriefStore {
             case .emotionalState:
                 emotionalState = t
             case .mainConcern:
-                themes.append(t)
+                if themes.count < 3 {
+                    themes.append(t)
+                }
             case .keyEmotion:
-                focusItems.append(t)
+                keyEmotionLines.append(t)
             case .whatToSay:
                 patientWords = patientWords.isEmpty ? t : "\(patientWords) \(t)"
-            case .unresolvedThread, .therapyGoal:
-                focusItems.append(t)
+            case .unresolvedThread:
+                unresolvedLines.append(t)
+            case .therapyGoal:
+                if therapyGoalLines.count < 2 {
+                    therapyGoalLines.append(t)
+                }
             case .patternNote, .emotionalRead:
                 break
             }
         }
 
+        var focusItems: [String] = []
+        if let k = keyEmotionLines.first { focusItems.append(k) }
+        if let u = unresolvedLines.first { focusItems.append(u) }
+        focusItems.append(contentsOf: therapyGoalLines)
+
         for i in session.insights {
-            if themes.count < 4 {
+            if themes.count < 3 {
                 themes.append("\(i.theme): \(String(i.text.prefix(160)))")
             }
         }

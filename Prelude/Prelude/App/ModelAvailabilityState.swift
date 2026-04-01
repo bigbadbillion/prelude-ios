@@ -97,54 +97,8 @@ enum PreludeModelAvailability: Equatable {
             return .unknown
         }
     }
-
-    @available(iOS 26.0, *)
-    private static func systemLanguageModelDiagnostics() -> String {
-        switch SystemLanguageModel.default.availability {
-        case .available:
-            return "SystemLanguageModel.default.availability == .available"
-        case .unavailable(.deviceNotEligible):
-            return "SystemLanguageModel: unavailable · device not eligible"
-        case .unavailable(.appleIntelligenceNotEnabled):
-            return "SystemLanguageModel: unavailable · Apple Intelligence off"
-        case .unavailable(.modelNotReady):
-            return "SystemLanguageModel: unavailable · model not ready (downloading / system)"
-        case .unavailable:
-            return "SystemLanguageModel: unavailable · other reason"
-        @unknown default:
-            return "SystemLanguageModel: unknown availability state"
-        }
-    }
     #endif
 
-    /// Short label for Settings: whether turns use **LanguageModelSession** or the scripted path.
+    /// `true` when reflection turns use **LanguageModelSession** (vs scripted fallback); used for Settings label.
     static var isLiveFoundationModelActive: Bool { shouldAttemptFoundationModels }
-
-    /// Extra line under the indicator (Simulator vs device + warm copy / diagnostics).
-    static func settingsSessionDriverFootnote() -> String {
-        if shouldAttemptFoundationModels {
-            return "Reflection turns use the on-device Apple Intelligence model."
-        }
-        #if targetEnvironment(simulator)
-        return "Simulator cannot run the on-device model — Prelude uses a scripted conversation."
-        #else
-        return resolve().message
-        #endif
-    }
-
-    /// Compact technical line for Settings (helps debug “scripted only” on device).
-    static func settingsDiagnosticsLine() -> String {
-        #if targetEnvironment(simulator)
-        return "Runtime: iOS Simulator (FoundationModels session disabled)."
-        #else
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *) {
-            return systemLanguageModelDiagnostics()
-        }
-        return "iOS version does not expose SystemLanguageModel (need iOS 26+)."
-        #else
-        return "This build has no FoundationModels module."
-        #endif
-        #endif
-    }
 }

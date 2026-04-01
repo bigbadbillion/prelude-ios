@@ -85,6 +85,12 @@ enum ConversationPhasePolicy {
     /// User explicitly asked to wrap — still need *something* to summarize.
     private static let minWordsWhenUserRequestsWrap = 18
 
+    /// Host promotes `excavation` → `readBack` when read-back is allowed **and** the session has enough shape (not model-chosen).
+    private static let autoReadBackMinElapsedSeconds: TimeInterval = 8 * 60
+    private static let autoReadBackMinSubstantiveTurns = 3
+    private static let autoReadBackMinCumulativeWords = 160
+    private static let autoReadBackMinInsights = 2
+
     static func readBackAllowed(
         metrics: SessionTurnMetrics,
         savedInsightCount: Int,
@@ -111,12 +117,14 @@ enum ConversationPhasePolicy {
     }
 
     /// Single source of truth for phase after the agent has produced a decision for this user turn.
+    /// - Parameter sessionElapsedSeconds: `Date().timeIntervalSince(session.startedAt)`; use `0` in tests to disable time-based wrap-up.
     static func resolvePhase(
         current: ConversationPhase,
         userUtterance: String,
         metrics: SessionTurnMetrics,
         savedInsightCount: Int,
-        modelAction: AgentAction
+        modelAction: AgentAction,
+        sessionElapsedSeconds: TimeInterval
     ) -> ConversationPhase {
         let signals = UserUtteranceSignals.parse(userUtterance)
         let rbOK = readBackAllowed(metrics: metrics, savedInsightCount: savedInsightCount, signals: signals)
@@ -145,6 +153,13 @@ enum ConversationPhasePolicy {
             return .openField
 
         case .excavation:
+            if rbOK, shouldHostPromoteExcavationToReadBack(
+                metrics: metrics,
+                savedInsightCount: savedInsightCount,
+                elapsedSeconds: sessionElapsedSeconds
+            ) {
+                return .readBack
+            }
             return .excavation
 
         case .readBack:
@@ -153,6 +168,38 @@ enum ConversationPhasePolicy {
         case .closing:
             return .closing
         }
+    }
+
+    /// Phase for **this** user turn’s model prompt: metrics must include the latest utterance; `modelAction` is `.respond` when projecting before inference.
+    static func effectivePhaseForPrompt(
+        storedPhase: ConversationPhase,
+        userUtterance: String,
+        metricsIncludingLatestUserTurn: SessionTurnMetrics,
+        savedInsightCount: Int,
+        sessionElapsedSeconds: TimeInterval
+    ) -> ConversationPhase {
+        resolvePhase(
+            current: storedPhase,
+            userUtterance: userUtterance,
+            metrics: metricsIncludingLatestUserTurn,
+            savedInsightCount: savedInsightCount,
+            modelAction: .respond,
+            sessionElapsedSeconds: sessionElapsedSeconds
+        )
+    }
+
+    private static func shouldHostPromoteExcavationToReadBack(
+        metrics: SessionTurnMetrics,
+        savedInsightCount: Int,
+        elapsedSeconds: TimeInterval
+    ) -> Bool {
+        if elapsedSeconds >= autoReadBackMinElapsedSeconds { return true }
+        if metrics.substantiveUserTurns >= autoReadBackMinSubstantiveTurns { return true }
+        if metrics.cumulativeUserWords >= autoReadBackMinCumulativeWords { return true }
+        if savedInsightCount >= autoReadBackMinInsights, metrics.substantiveUserTurns >= minSubstantiveTurnsForModelReadBack {
+            return true
+        }
+        return false
     }
 
     private static func shouldEnterExcavation(metrics: SessionTurnMetrics, savedInsightCount: Int) -> Bool {

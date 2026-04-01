@@ -111,15 +111,16 @@ struct WeeklyBriefView: View {
             ThemeTagFlowLayout(spacing: 8) {
                 ForEach(Array(themes.enumerated()), id: \.offset) { _, theme in
                     Text(theme)
-                        // `styles.tagText`: Inter 500 13
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(palette.amber)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
                         .background(palette.amber.opacity(isDark ? 0.12 : 0.10))
-                        .clipShape(Capsule())
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .overlay(
-                            Capsule()
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
                                 .stroke(palette.amber.opacity(0.25), lineWidth: 1)
                         )
                 }
@@ -197,19 +198,24 @@ struct WeeklyBriefView: View {
             }
             .padding(.horizontal, 14)
 
-            EmotionalArcChartView(sessions: sessions)
-                .padding(.horizontal, 4)
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("↑ lighter")
+                    Spacer(minLength: 0)
+                    Text("↓ heavier")
+                }
+                .font(.system(size: 8, weight: .regular, design: .default))
+                .tracking(0.4)
+                .foregroundStyle((isDark ? PreludeColors.tertiaryDark : PreludeColors.tertiaryLight).opacity(0.6))
+                .multilineTextAlignment(.leading)
+                .accessibilityHidden(true)
+                .frame(width: 44, height: EmotionalArcChartView.chartTotalHeight, alignment: .topLeading)
 
-            HStack {
-                Text("heavier")
-                Spacer()
-                Text("lighter")
+                EmotionalArcChartView(sessions: sessions)
+                    .frame(maxWidth: .infinity)
             }
-            .font(.system(size: 8, weight: .regular, design: .default))
-            .tracking(0.4)
-            .foregroundStyle((isDark ? PreludeColors.tertiaryDark : PreludeColors.tertiaryLight).opacity(0.6))
-            .padding(.horizontal, 24)
-            .padding(.top, 2)
+            .padding(.leading, 10)
+            .padding(.trailing, 6)
         }
         .padding(.top, 16)
         .padding(.bottom, 10)
@@ -226,19 +232,27 @@ struct WeeklyBriefView: View {
 
 // MARK: - Theme tags (RN `flexWrap` parity)
 
-/// Horizontal flow with wrap, matching React Native `flexDirection: 'row'` + `flexWrap: 'wrap'` + `gap`.
+/// Horizontal flow with wrap (`flexWrap` + `gap`). Subviews must measure correctly with a **finite width** proposal (e.g. multi-line `Text`); `.unspecified` would keep text on one line and truncate.
 private struct ThemeTagFlowLayout: Layout {
     var spacing: CGFloat
 
+    /// If less than this remains on the row, start the next chip on a new row—otherwise long prose measures into a narrow strip beside the previous chip.
+    private func minTrailingWidthToShareRow(rowWidth: CGFloat) -> CGFloat {
+        max(152, rowWidth * 0.42)
+    }
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        layout(subviews: subviews, maxWidth: proposal.width ?? .infinity).0
+        let w = proposal.width ?? .greatestFiniteMagnitude
+        let maxW = w.isFinite && w > 0 ? w : 400
+        return layout(subviews: subviews, maxWidth: maxW).0
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let (_, frames) = layout(subviews: subviews, maxWidth: bounds.width)
         for (index, subview) in subviews.enumerated() {
-            let origin = CGPoint(x: bounds.minX + frames[index].minX, y: bounds.minY + frames[index].minY)
-            subview.place(at: origin, proposal: ProposedViewSize(frames[index].size))
+            let f = frames[index]
+            let origin = CGPoint(x: bounds.minX + f.minX, y: bounds.minY + f.minY)
+            subview.place(at: origin, proposal: ProposedViewSize(width: f.width, height: f.height))
         }
     }
 
@@ -250,21 +264,40 @@ private struct ThemeTagFlowLayout: Layout {
         var widestRow: CGFloat = 0
 
         for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if rowX + size.width > maxWidth, rowX > 0 {
-                widestRow = max(widestRow, rowX - spacing)
-                rowX = 0
+            if maxWidth - rowX <= 0 {
+                widestRow = max(widestRow, max(0, rowX - spacing))
                 rowY += rowHeight + spacing
+                rowX = 0
                 rowHeight = 0
             }
+
+            var lineAvailable = maxWidth - rowX
+            if rowX > 0, lineAvailable < minTrailingWidthToShareRow(rowWidth: maxWidth) {
+                widestRow = max(widestRow, rowX - spacing)
+                rowY += rowHeight + spacing
+                rowX = 0
+                rowHeight = 0
+                lineAvailable = maxWidth
+            }
+
+            var size = subview.sizeThatFits(ProposedViewSize(width: lineAvailable, height: nil))
+
+            if rowX > 0, size.width > lineAvailable {
+                widestRow = max(widestRow, rowX - spacing)
+                rowY += rowHeight + spacing
+                rowX = 0
+                rowHeight = 0
+                size = subview.sizeThatFits(ProposedViewSize(width: maxWidth, height: nil))
+            }
+
             frames.append(CGRect(x: rowX, y: rowY, width: size.width, height: size.height))
             rowHeight = max(rowHeight, size.height)
             rowX += size.width + spacing
         }
-        widestRow = max(widestRow, rowX == 0 ? 0 : rowX - spacing)
 
+        widestRow = max(widestRow, rowX == 0 ? 0 : rowX - spacing)
         let totalHeight = rowY + rowHeight
-        let width = maxWidth.isFinite ? min(widestRow, maxWidth) : widestRow
+        let width = min(widestRow, maxWidth)
         return (CGSize(width: width, height: totalHeight), frames)
     }
 }

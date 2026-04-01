@@ -43,7 +43,8 @@ Phases: `warmOpen` → `openField` → `excavation` → `readBack` → `closing`
 - Parses **user utterance signals** (wrap/recap/end/greeting) with deterministic English phrase lists.
 - Tracks **user-grounded metrics** (`SessionTurnMetrics`: substantive turns, cumulative words) — not agent reply count.
 - Decides when **read-back** and **closing** are allowed (e.g. minimum words/turns before a model `readBackSummary`; closing rules for `endSession` vs user “done”).
-- `AgentController.applyPhaseAfterAgentTurn` runs **after** each model turn using `rawTranscriptLine` and `modelAction`.
+- Promotes **`excavation` → `readBack`** when read-back is allowed **and** host depth/time thresholds are met (substantive-turn/word caps, session elapsed ~8 minutes, or multiple saved insights) — not only when the model emits `readBackSummary`.
+- `AgentController.applyPhaseAfterAgentTurn` runs **after** each model turn using `rawTranscriptLine` and `modelAction` (with session elapsed time). **`effectivePhaseForIncomingTurn`** projects phase **before** inference so the per-turn prompt matches wrap-up on the same turn as the transition.
 
 ### 1.5 Live agent: Foundation Models integration
 
@@ -51,7 +52,7 @@ Phases: `warmOpen` → `openField` → `excavation` → `readBack` → `closing`
 
 - **Long-lived `LanguageModelSession`** stored on `AgentController` (`foundationSessionStorage`), recreated when toggling tool vs text-only.
 - **Opening:** `runOpening` — **tool-free** session first (`GenerableOpeningUtterance`); on failure, fallback to `GenerableAgentDecision`.
-- **Each user turn:** `runTurn` — prompt includes phase, latest user text, structured-output instructions; if `readBack`, injects **truncated chronological transcript** (~3800 chars) and recap instructions. Retries **with tools**, then **text-only** on failure (resets session).
+- **Each user turn:** `runTurn` — prompt includes **effective** conversation phase (`AgentController.effectivePhaseForIncomingTurn`), latest user text, structured-output instructions; if effective phase is `readBack`, injects **truncated chronological transcript** (~3800 chars) and recap instructions (and skips the default “always end with a deep question” rule). Retries **with tools**, then **text-only** on failure (resets session).
 - **Concurrency:** Model work is **not** on `@MainActor`; tools hop to `MainActor` for SwiftData to avoid deadlock (documented in file).
 
 **Structured output:** `GenerableAgentDecision` → `AgentDecision` (`action`, `spokenResponse`, `reasoning`). `AgentAction` includes `respond`, `askQuestion`, `saveInsight`, `reflectBack`, `readBackSummary`, `endSession` with **lenient** string mapping (`AgentDecision.swift`).
@@ -131,14 +132,14 @@ Built dynamically as `openingInstructions`:
 
 Appends to the prompt (in order):
 
-1. `Current conversation phase: <phase>.`
+1. `Current conversation phase: <effectivePhase>.` from `effectivePhaseForIncomingTurn` (includes latest user line in metrics; aligns wrap-up with read-back on the transition turn).
 2. `User said (latest turn): <userUtteranceForModel>` (may include barge-in preamble for the model).
 3. Structured output reminder: `action`, `spokenResponse`, `reasoning`; use tools when helpful.
-4. Rule: substantive shares → **end with one gentle open question** (unless minimal greeting, safety/crisis, closing/read-back as appropriate).
-5. If **read-back steer** (`agent.shouldSteerTowardSessionRecapInPrompt`, i.e. phase is `readBack`): inject **chronological session transcript** (truncated) + paragraph instructing **whole-arc** synthesis, prefer `readBackSummary`.
-6. Else if phase **closing**: short note — warm gratitude, no new deep probes unless user still sharing.
+4. If **read-back steer** (effective phase is `readBack`): inject **chronological session transcript** (truncated) + paragraph instructing **whole-arc** synthesis, prefer `readBackSummary`; do not push a separate deep exploratory question.
+5. Else if effective phase **closing**: short note — warm gratitude, no new deep probes unless user still sharing.
+6. Else: substantive shares → **end with one gentle open question** (unless minimal greeting, safety/crisis, or clear read-back/closing as appropriate).
 
-Phase updates happen **after** the model returns, via `ConversationPhasePolicy` + `applyPhaseAfterAgentTurn`.
+Stored `currentPhase` is updated **after** the model returns (`recordUserTurnMetricsOnly` then `applyPhaseAfterAgentTurn` with the same policy + `sessionElapsedSeconds`).
 
 ### 2.5 Brief writer agent — instructions + prompt
 
@@ -146,10 +147,10 @@ Phase updates happen **after** the model returns, via `ConversationPhasePolicy` 
 
 | Piece | Content summary |
 |--------|-------------------|
-| **Session `Instructions`** (`instructionsString`) | Role: **session-brief writer** (not live coach). Therapy-prep **worksheet** from USER SPOKE + saved material. Critical **voice rule:** only **`what_to_say`** may echo user voice; all other sections **synthesized**, no transcript copying. Section meanings (emotional_state, weighing_on_me, secondary_theme, key_emotion, what_to_say, unresolved_thread, therapy_goal, pattern_note, emotional_read). De-duplication; no invented crises. Finish with structured completion. |
+| **Session `Instructions`** (`instructionsString`) | Role: **session-brief writer** (not live coach). Therapy-prep **worksheet** from USER SPOKE + saved material. Critical **voice rule:** only **`what_to_say`** may echo user voice; all other sections **synthesized**, no transcript copying. Section keys include **three** weighing lines (`weighing_on_me`, `secondary_theme`, `tertiary_theme`) and **two** hope lines (`therapy_goal`, `therapy_goal_2`), plus `emotional_state`, `key_emotion`, `what_to_say`, `unresolved_thread`, `pattern_note`, `emotional_read`. De-duplication; no invented crises. Finish with structured completion. |
 | **Tool `setBriefSection`** | Per-section writer; `@Guide` on `section` and `text` describes keys and sanitization expectations. |
 | **Structured completion** `GenerableBriefAgentAck` | `status` = "done"; optional `dominantEmotionKey` for session. |
-| **`Prompt`** | `=== MATERIAL ===` + context bundle; optional `=== CROSS-SESSION PATTERN ===`; `=== TASK ===` listing required sections and optional secondary_theme / pattern_note. |
+| **`Prompt`** | `=== MATERIAL ===` + context bundle; optional `=== CROSS-SESSION PATTERN ===`; `=== TASK ===` listing required sections; optional `pattern_note` only when the cross-session pattern fits. |
 
 **Tool implementation:** Normalizes/sanitizes via `BriefPatientWordsNormalizer` / `BriefDraftSanitizer` to reduce verbatim transcript bleed.
 
@@ -162,7 +163,7 @@ Phase updates happen **after** the model returns, via `ConversationPhasePolicy` 
 | **`Instructions`** | Fallback brief writer: only **patientWords** may echo user in one line; other fields synthesized; `patternNote` empty unless pattern in prompt fits; no clinical diagnosis; `dominantEmotionKey` when confident. |
 | **`Prompt`** | Context bundle + optional cross-session pattern line + “Produce the structured brief.” |
 
-**Output schema:** `GenerableSessionBriefOut` with per-field `@Guide` strings (emotional state, themes, patient words, focuses, pattern, emotion key).
+**Output schema:** `GenerableSessionBriefOut` with per-field `@Guide` strings (emotional state, three theme lines, patient words, four focus slots mapped to key emotion / unresolved thread / two hopes, pattern, emotion key).
 
 ### 2.7 Weekly brief — one-shot
 

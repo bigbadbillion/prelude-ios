@@ -4,6 +4,8 @@ struct BriefCardView: View {
     let type: CardType
     let text: String
     var isUserWords: Bool = false
+    /// When non-empty, renders one panel with numbered lines instead of a single `text` block.
+    var numberedLines: [String] = []
 
     @Environment(\.colorScheme) private var scheme
 
@@ -42,6 +44,21 @@ struct BriefCardView: View {
                             .fill(palette.amber.opacity(0.85))
                             .frame(width: 3)
                     }
+            } else if !numberedLines.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(numberedLines.enumerated()), id: \.offset) { index, line in
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text("\(index + 1).")
+                                .font(PreludeTypeScale.cardBody())
+                                .foregroundStyle(palette.tertiary)
+                                .frame(minWidth: 22, alignment: .trailing)
+                            Text(line)
+                                .font(PreludeTypeScale.cardBody())
+                                .foregroundStyle(palette.primary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
             } else {
                 Text(text)
                     .font(PreludeTypeScale.cardBody())

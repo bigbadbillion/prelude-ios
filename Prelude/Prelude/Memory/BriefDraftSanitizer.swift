@@ -8,9 +8,11 @@ enum BriefDraftSanitizer {
         "emotional_state",
         "weighing_on_me",
         "secondary_theme",
+        "tertiary_theme",
         "key_emotion",
         "unresolved_thread",
         "therapy_goal",
+        "therapy_goal_2",
         "pattern_note",
         "emotional_read",
     ]
@@ -19,9 +21,11 @@ enum BriefDraftSanitizer {
         "emotional_state": 120,
         "weighing_on_me": 140,
         "secondary_theme": 120,
+        "tertiary_theme": 120,
         "key_emotion": 72,
         "unresolved_thread": 200,
         "therapy_goal": 200,
+        "therapy_goal_2": 200,
         "pattern_note": 220,
         "emotional_read": 520,
     ]

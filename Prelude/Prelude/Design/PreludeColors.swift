@@ -73,21 +73,21 @@ struct PreludePalette {
 }
 
 extension Color {
-    /// PRD §8 emotion mapping (AppContext emotionColors)
+    /// Warm-instrument palette (`colors.ts` / Expo). Each label is a distinct hue for small markers and the weekly arc.
     static func preludeEmotion(_ label: EmotionLabel) -> Color {
         switch label {
-        case .anxious: return Color(red: 0.710, green: 0.514, blue: 0.353)
+        case .anxious: return Color(red: 0.710, green: 0.478, blue: 0.380)
         case .sad: return Color(red: 0.420, green: 0.549, blue: 0.682)
-        case .angry: return Color(red: 0.682, green: 0.420, blue: 0.420)
-        case .confused: return Color(red: 0.549, green: 0.482, blue: 0.682)
+        case .angry: return Color(red: 0.682, green: 0.380, blue: 0.400)
+        case .confused: return Color(red: 0.549, green: 0.451, blue: 0.682)
         case .hopeful: return PreludeColors.sage
-        case .happy: return Color(red: 0.451, green: 0.682, blue: 0.529)
-        case .excited: return Color(red: 0.898, green: 0.580, blue: 0.345)
-        case .overwhelmed: return Color(red: 0.682, green: 0.549, blue: 0.420)
-        case .frustrated: return Color(red: 0.769, green: 0.451, blue: 0.294)
-        case .calm: return Color(red: 0.620, green: 0.580, blue: 0.522)
+        case .happy: return Color(red: 0.380, green: 0.718, blue: 0.520)
+        case .excited: return Color(red: 0.898, green: 0.549, blue: 0.310)
+        case .overwhelmed: return Color(red: 0.569, green: 0.482, blue: 0.369)
+        case .frustrated: return Color(red: 0.780, green: 0.431, blue: 0.275)
+        case .calm: return PreludeColors.calm
         case .reflective: return Color(red: 0.451, green: 0.529, blue: 0.620)
-        case .grieving: return Color(red: 0.482, green: 0.549, blue: 0.682)
+        case .grieving: return Color(red: 0.502, green: 0.439, blue: 0.620)
         }
     }
 }

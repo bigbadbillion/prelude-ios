@@ -38,6 +38,11 @@ struct SetBriefSectionFMTool: Tool {
         **All other sections must be short synthesized therapy-prep language** — your summary of what matters, \
         **not** sentences copied from USER SPOKE. No duplicate content across sections.
 
+        **Weighing (three calls):** `weighing_on_me`, `secondary_theme`, `tertiary_theme` — three **distinct** emotional weights; \
+        none may repeat the same idea.
+
+        **Hope for today (two calls):** `therapy_goal` and `therapy_goal_2` — two **distinct** hopes for the therapy hour.
+
         **pattern_note**: only when the supplied cross-session pattern clearly fits; otherwise **omit** this call. \
         Never paste USER SPOKE into pattern_note.
         """
@@ -47,8 +52,8 @@ struct SetBriefSectionFMTool: Tool {
     struct Arguments {
         @Guide(
             description: """
-                Section key: emotional_state, weighing_on_me, secondary_theme, key_emotion, what_to_say, \
-                unresolved_thread, therapy_goal, pattern_note, emotional_read
+                Section key: emotional_state, weighing_on_me, secondary_theme, tertiary_theme, key_emotion, what_to_say, \
+                unresolved_thread, therapy_goal, therapy_goal_2, pattern_note, emotional_read
                 """
         )
         var section: String
@@ -56,9 +61,10 @@ struct SetBriefSectionFMTool: Tool {
         @Guide(
             description: """
                 Card text. **what_to_say**: one salient first-person line to say in session (may echo their voice; not the full log). \
-                **weighing_on_me**: one short synthesized line naming the emotional weight (do not quote USER SPOKE). \
+                **weighing_on_me** / **secondary_theme** / **tertiary_theme**: three short synthesized lines for distinct emotional weights (do not quote USER SPOKE). \
                 **key_emotion**: a brief emotion label or quality (e.g. “Quiet pride mixed with fatigue”) — not a transcript clip. \
-                **unresolved_thread** / **therapy_goal**: infer what’s unfinished and what they need from the hour — new wording. \
+                **unresolved_thread**: what feels unfinished — new wording. \
+                **therapy_goal** / **therapy_goal_2**: two distinct hopes for this therapy hour — new wording. \
                 **emotional_read**: 2–4 sentences on tone of the brief you wrote. \
                 **pattern_note**: only if cross-session pattern fits; else skip the tool call.
                 """
@@ -121,12 +127,14 @@ enum PreludeBriefAgent {
 
         **Section meanings (prep worksheets often ask: what am I noticing? what’s unfinished? what do I need from the hour?)** \
         - **emotional_state**: How I showed up emotionally today — one short line you infer (not a quote). \
-        - **weighing_on_me**: The main emotional weight or situation — **one synthesized line** (not verbatim from the log). \
-        - **secondary_theme**: Optional second angle — **must differ** from weighing_on_me; skip the tool if none. \
+        - **weighing_on_me**: First main emotional weight — **one synthesized line** (not verbatim from the log). \
+        - **secondary_theme**: Second distinct emotional weight — **must differ** from weighing_on_me. \
+        - **tertiary_theme**: Third distinct emotional weight — **must differ** from the first two. \
         - **key_emotion**: Compact label for the emotional quality (a few words; not a sentence from the transcript). \
         - **what_to_say**: Exactly **one** distilled sentence (or two very short ones); the line they most need to say aloud; ≤~280 characters; no transcript dump. \
         - **unresolved_thread**: What feels **unfinished** or tense — infer in **new** words. \
-        - **therapy_goal**: What they need **from this therapy hour** (clarity, pacing, being seen, etc.) — infer; not a random quote. \
+        - **therapy_goal**: First hope for **this therapy hour** — infer; not a random quote. \
+        - **therapy_goal_2**: Second distinct hope for the hour — must differ from therapy_goal. \
         - **pattern_note**: **Only** if the cross-session pattern in the prompt clearly fits **this** conversation. Otherwise **omit** the tool call. Never paste USER SPOKE here. \
         - **emotional_read**: 2–4 sentences on how the **brief you wrote** reads (warmth, tension, hope) — not diagnosis.
 
@@ -168,9 +176,9 @@ enum PreludeBriefAgent {
             }
             """
             === TASK ===
-            Call setBriefSection for: emotional_state, weighing_on_me, key_emotion, what_to_say, \
-            unresolved_thread, therapy_goal, emotional_read. \
-            Optional: secondary_theme (only if distinct), pattern_note (only if cross-session pattern fits). \
+            Call setBriefSection for: emotional_state, weighing_on_me, secondary_theme, tertiary_theme, key_emotion, what_to_say, \
+            unresolved_thread, therapy_goal, therapy_goal_2, emotional_read. \
+            Optional: pattern_note (only if cross-session pattern fits). \
             Then structured completion: status 'done'; set dominantEmotionKey when you can (schema).
             """
         }

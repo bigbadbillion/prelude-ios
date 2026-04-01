@@ -63,8 +63,13 @@ struct BriefDetailView: View {
                     .padding(.bottom, 20)
 
                 ForEach(Array(cards.enumerated()), id: \.offset) { index, card in
-                    BriefCardView(type: card.type, text: card.text, isUserWords: card.isUserWords)
-                        .transition(.opacity.combined(with: .offset(y: 12)))
+                    BriefCardView(
+                        type: card.type,
+                        text: card.text,
+                        isUserWords: card.isUserWords,
+                        numberedLines: card.numberedLines ?? []
+                    )
+                    .transition(.opacity.combined(with: .offset(y: 12)))
                 }
                 .animation(PreludeMotion.reveal, value: cards.count)
 
@@ -144,14 +149,19 @@ struct BriefDetailView: View {
         let type: CardType
         let text: String
         var isUserWords: Bool = false
+        /// When set, `BriefCardView` shows one panel with a numbered list (weighing / hope cards).
+        var numberedLines: [String]? = nil
     }
 
     private func buildCards(from brief: SessionBrief) -> [CardItem] {
         var cards: [CardItem] = [
             CardItem(type: .emotionalState, text: brief.emotionalState),
         ]
-        if let t = brief.themes.first {
-            cards.append(CardItem(type: .mainConcern, text: t, isUserWords: false))
+        let weighingLines = brief.themes.prefix(3).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        if !weighingLines.isEmpty {
+            cards.append(
+                CardItem(type: .mainConcern, text: "", numberedLines: weighingLines)
+            )
         }
         if let f = brief.focusItems.first {
             cards.append(CardItem(type: .keyEmotion, text: f))
@@ -160,8 +170,17 @@ struct BriefDetailView: View {
         if brief.focusItems.count > 1 {
             cards.append(CardItem(type: .unresolvedThread, text: brief.focusItems[1]))
         }
-        for i in 2 ..< brief.focusItems.count {
-            cards.append(CardItem(type: .therapyGoal, text: brief.focusItems[i]))
+        var hopeLines: [String] = []
+        if brief.focusItems.count > 2 {
+            let g1 = brief.focusItems[2].trimmingCharacters(in: .whitespacesAndNewlines)
+            if !g1.isEmpty { hopeLines.append(g1) }
+        }
+        if brief.focusItems.count > 3 {
+            let g2 = brief.focusItems[3].trimmingCharacters(in: .whitespacesAndNewlines)
+            if !g2.isEmpty { hopeLines.append(g2) }
+        }
+        if !hopeLines.isEmpty {
+            cards.append(CardItem(type: .therapyGoal, text: "", numberedLines: hopeLines))
         }
         let affective = brief.affectiveAnalysis.trimmingCharacters(in: .whitespacesAndNewlines)
         if !affective.isEmpty {
@@ -174,7 +193,14 @@ struct BriefDetailView: View {
     }
 
     private func shareText(cards: [CardItem]) -> String {
-        cards.map { "\($0.type.rawValue.uppercased())\n\($0.text)" }.joined(separator: "\n\n")
+        cards.map { card in
+            let header = card.type.rawValue.uppercased()
+            if let lines = card.numberedLines, !lines.isEmpty {
+                let body = lines.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
+                return "\(header)\n\(body)"
+            }
+            return "\(header)\n\(card.text)"
+        }.joined(separator: "\n\n")
     }
 
     @MainActor

@@ -126,21 +126,36 @@ final class AgentController: ObservableObject {
         }
     }
 
-    /// True when per-turn prompts should steer toward an audible **whole-session** recap (readBack only).
-    /// Previously we also steered during late `excavation`, which made the model mirror the **latest** turn
-    /// instead of synthesizing the full conversation — recap belongs strictly in `readBack`.
+    /// True when stored phase is `readBack` after the last completed agent turn.
+    /// Live turns use `effectivePhaseForIncomingTurn` so the transition into read-back gets recap steering the same turn.
     var shouldSteerTowardSessionRecapInPrompt: Bool {
         currentPhase == .readBack
     }
 
+    /// Conversation phase the model should assume **for this user turn** (metrics include `rawTranscriptLine`; not yet persisted).
+    func effectivePhaseForIncomingTurn(rawTranscriptLine: String, session: Session) -> ConversationPhase {
+        var m = sessionTurnMetrics
+        m.recordUserUtterance(rawTranscriptLine)
+        let elapsed = Date().timeIntervalSince(session.startedAt)
+        return ConversationPhasePolicy.effectivePhaseForPrompt(
+            storedPhase: currentPhase,
+            userUtterance: rawTranscriptLine,
+            metricsIncludingLatestUserTurn: m,
+            savedInsightCount: session.insights.count,
+            sessionElapsedSeconds: elapsed
+        )
+    }
+
     /// Updates phase from **user utterance**, session memory (saved insights), and model `action` — not turn counts.
     func applyPhaseAfterAgentTurn(userUtterance: String, session: Session, modelAction: AgentAction) {
+        let elapsed = Date().timeIntervalSince(session.startedAt)
         currentPhase = ConversationPhasePolicy.resolvePhase(
             current: currentPhase,
             userUtterance: userUtterance,
             metrics: sessionTurnMetrics,
             savedInsightCount: session.insights.count,
-            modelAction: modelAction
+            modelAction: modelAction,
+            sessionElapsedSeconds: elapsed
         )
     }
 

@@ -55,6 +55,9 @@ enum EmotionalArcChartGeometry {
 
 /// Emotional arc over completed sessions. Stroke and area gradient use the **latest session’s tagged** `dominantEmotion` only — same as Expo `weekly.tsx` (`dominantColor` / `emotionColors`, not brief inference). Point labels use `EmotionLabel.resolved(for:)` so dots can reflect brief tone when the tag is missing or baseline `.calm`.
 struct EmotionalArcChartView: View {
+    /// Total view height (plot + date band); use to align external axis labels.
+    static let chartTotalHeight: CGFloat = 100 + 28
+
     @Environment(\.colorScheme) private var scheme
 
     let sessions: [Session]
@@ -142,7 +145,7 @@ struct EmotionalArcChartView: View {
             .compositingGroup()
             .frame(width: geo.size.width, height: layout.totalHeight, alignment: .topLeading)
         }
-        .frame(height: 100 + 28)
+        .frame(height: Self.chartTotalHeight)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
     }
@@ -155,6 +158,7 @@ struct EmotionalArcChartView: View {
             return "\(Self.chartDateFormatter.string(from: d)), \(e.rawValue)"
         }
         return "Emotional arc across sessions: " + parts.joined(separator: "; ")
+            + " Vertical axis: heavier affect toward the bottom, lighter toward the top."
     }
 
     private struct LayoutEntry: Identifiable {

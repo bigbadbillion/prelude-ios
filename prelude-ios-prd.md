@@ -167,15 +167,16 @@ Insight dimensions:
 
 ### F4 — Session Brief
 
-Generated after every session. Not a transcript summary — a personal brief written in the user's voice. Five to seven structured cards covering:
+Generated after every session. Not a transcript summary — a personal brief written in the user's voice. Roughly eight to twelve structured cards covering:
 
 1. How I showed up today (emotional state)
-2. The thing that's really weighing on me
+2. Three things weighing on me (three distinct lines)
 3. Key emotion underneath it
 4. What I want to make sure I say
 5. An unresolved thread worth exploring
-6. What I'm hoping therapy helps with today
+6. Two things I hope for from therapy today (two distinct lines)
 7. Pattern note (if recurring theme detected across 3+ sessions)
+8. How this brief reads (when included)
 
 ### F5 — Session History & Emotional Patterns
 
@@ -366,7 +367,7 @@ enum ConversationPhase {
 }
 ```
 
-Phase transitions are managed by `AgentController` based on elapsed time and agent action signals. The agent does not know its phase number — it receives phase-appropriate instructions in the system prompt.
+Phase transitions are managed by `AgentController` using **`ConversationPhasePolicy`**: user-grounded signals (cumulative words, substantive turns, saved insights, English wrap/end phrases), optional **session elapsed time** (~8 minutes can promote toward read-back when enough material exists), and validated model actions (`readBackSummary`, `endSession`). The agent does not choose the phase number — it receives phase-appropriate instructions in the per-turn prompt (including **effective phase** for the current user turn so wrap-up aligns with read-back).
 
 ### Tool Registry
 
@@ -980,7 +981,7 @@ class HapticEngine {
 
 Described in full in Section 10.5.
 
-Additional detail: the session screen has no visible timer. Time pressure is the enemy of honest reflection. The user can see a subtle progress arc at the very edge of the presence shape — not a countdown, but a slow fill that completes at ~10 minutes. At ~8 minutes, the agent naturally begins transitioning toward the read-back phase regardless.
+Additional detail: the session screen has no visible timer. Time pressure is the enemy of honest reflection. The user can see a subtle progress arc at the very edge of the presence shape — not a countdown, but a slow fill that completes at ~10 minutes. The host may begin transitioning toward the **read-back** phase around ~8 minutes of session time (when read-back is allowed and there is enough user material), in addition to depth-based rules — not by agent reply counts.
 
 #### Brief Screen
 

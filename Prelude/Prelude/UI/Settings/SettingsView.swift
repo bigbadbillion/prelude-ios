@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
+    @AppStorage(UserSettings.colorSchemeStorageKey) private var colorSchemeRaw = PreludeColorSchemePreference.system.rawValue
     @State private var name: String = UserSettings.userName
     @State private var voiceLabel: String = "Checking…"
     @State private var showClearAllConfirm = false
@@ -15,6 +16,13 @@ struct SettingsView: View {
 
     private var liveModelActive: Bool { PreludeModelAvailability.isLiveFoundationModelActive }
 
+    private var colorSchemePreference: Binding<PreludeColorSchemePreference> {
+        Binding(
+            get: { PreludeColorSchemePreference(rawValue: colorSchemeRaw) ?? .system },
+            set: { colorSchemeRaw = $0.rawValue }
+        )
+    }
+
     var body: some View {
         @Bindable var app = appState
 
@@ -22,50 +30,31 @@ struct SettingsView: View {
             palette.depth.ignoresSafeArea()
             Form {
                 Section {
-                    HStack(alignment: .top, spacing: 14) {
+                    HStack(alignment: .center, spacing: 14) {
                         Image(systemName: liveModelActive ? "sparkles" : "text.bubble")
                             .font(.title2)
                             .foregroundStyle(liveModelActive ? palette.sage : palette.secondary)
                             .frame(width: 28, alignment: .center)
                             .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(liveModelActive ? "On-device model active" : "Scripted session mode")
-                                .font(PreludeTypeScale.label())
-                                .foregroundStyle(palette.primary)
-                            Text(PreludeModelAvailability.settingsSessionDriverFootnote())
-                                .font(PreludeTypeScale.caption())
-                                .foregroundStyle(palette.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Divider()
-                                .padding(.vertical, 4)
-                            Text("Session start: \(app.availability.title)")
-                                .font(PreludeTypeScale.caption())
-                                .foregroundStyle(palette.tertiary)
-                            Text(app.availability.message)
-                                .font(PreludeTypeScale.caption())
-                                .foregroundStyle(palette.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(PreludeModelAvailability.settingsDiagnosticsLine())
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(palette.tertiary.opacity(0.9))
-                                .padding(.top, 4)
-                                .textSelection(.enabled)
-                        }
+                        Text(liveModelActive ? "On-device model active" : "Scripted session mode")
+                            .font(PreludeTypeScale.label())
+                            .foregroundStyle(palette.primary)
                     }
-                    Button("Refresh status") {
-                        app.refreshAvailability()
-                    }
-                    .font(PreludeTypeScale.label())
-                    .foregroundStyle(palette.amber)
                 } header: {
                     Text("Apple Intelligence")
                         .font(PreludeTypeScale.caption())
-                } footer: {
-                    Text(
-                        "If this shows the on-device model as active but replies still feel scripted, the model request may be failing silently — check Xcode’s console while you speak."
-                    )
-                    .font(PreludeTypeScale.caption())
-                    .foregroundStyle(palette.tertiary)
+                }
+
+                Section {
+                    Picker("Appearance", selection: colorSchemePreference) {
+                        ForEach(PreludeColorSchemePreference.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Appearance")
+                        .font(PreludeTypeScale.caption())
                 }
 
                 Section {
@@ -102,6 +91,8 @@ struct SettingsView: View {
                     Link("Call or text 988", destination: URL(string: "tel:988")!)
                         .font(PreludeTypeScale.label())
                         .accessibilityLabel("988 Suicide and Crisis Lifeline")
+                    Link("Contact support", destination: URL(string: "mailto:ugo@echovault.me")!)
+                        .font(PreludeTypeScale.label())
                 } header: {
                     Text("Medical disclaimer")
                 }
@@ -147,7 +138,6 @@ struct SettingsView: View {
         }
         .onAppear {
             refreshVoice()
-            appState.refreshAvailability()
         }
     }
 
