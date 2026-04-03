@@ -1,0 +1,576 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		03E9825EF1FF48D3BDA74742 /* Prelude/UI/History/HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B96F6E384A46F382D8B6BC /* Prelude/UI/History/HistoryView.swift */; };
+		04D4E3777F6A4B7FB28730F8 /* Prelude/App/PreludeHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC58CA40979E43CFAA0E8763 /* Prelude/App/PreludeHaptics.swift */; };
+		0B265F72DD6749078A64C5E3 /* Prelude/Memory/InsightStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7F9B43804542C3A0238008 /* Prelude/Memory/InsightStore.swift */; };
+		0B30437B0D7C4BDB9D688989 /* Prelude/UI/Weekly/EmotionalArcChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F72CF97F59483EA7A24636 /* Prelude/UI/Weekly/EmotionalArcChartView.swift */; };
+		12E56D70C2D945D88E649AF2 /* Prelude/App/ModelAvailabilityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0C68DA8C0C4CF6ACEA65A4 /* Prelude/App/ModelAvailabilityState.swift */; };
+		1300913F70CA4D1DA024DF93 /* Prelude/Agent/PreludeAgentPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC121BB9CCB4730A5DD6A70 /* Prelude/Agent/PreludeAgentPrompts.swift */; };
+		18AA05CCA3A6405F9CAF2D43 /* Prelude/Voice/VoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806CFBEE44374A5781901E34 /* Prelude/Voice/VoiceEngine.swift */; };
+		202A7A2E100640E4868321C5 /* Prelude/UI/Brief/BriefCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7E190A6A864D63973C5D9F /* Prelude/UI/Brief/BriefCardView.swift */; };
+		260F6DDECF004FC29B5FAC5B /* Prelude/UI/Weekly/WeeklyBriefView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17BEDDAF315743D0B3DDEDD2 /* Prelude/UI/Weekly/WeeklyBriefView.swift */; };
+		2B90AF1D958D4DBA8AE46F9A /* Prelude/UI/Home/HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245F14806B27451FBF87E840 /* Prelude/UI/Home/HomeView.swift */; };
+		2D812A86C2734DA5A4F9D054 /* Prelude/UI/Session/SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323FB0C6D3A54B7F9751BC70 /* Prelude/UI/Session/SessionView.swift */; };
+		3507491A310C4EF99779904B /* Prelude/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2323834225304C8BA9D326DD /* Prelude/PrivacyInfo.xcprivacy */; };
+		36BCDB8EF97B4FE4BF89F10E /* Prelude/App/CrisisDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAA9CC37B96450A9B97DDEB /* Prelude/App/CrisisDetection.swift */; };
+		36DBC2A164E34C38B86802A2 /* Prelude/App/UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB35FDE669F422295F04B57 /* Prelude/App/UserSettings.swift */; };
+		392AF41F98B845E6937C0F7B /* Prelude/UI/Session/PresenceShapeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0555149EAF4F9B930739B0 /* Prelude/UI/Session/PresenceShapeView.swift */; };
+		3AD108A0A0A24505912FE76D /* Prelude/Agent/AgentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2689941AC041F8867118DC /* Prelude/Agent/AgentController.swift */; };
+		4476DFC5910049AB96AA5670 /* Prelude/Memory/BriefStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B1ECEAE2094899AFEF4148 /* Prelude/Memory/BriefStore.swift */; };
+		471744D0907B457AB9D9E71D /* Prelude/UI/Root/MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BD5A231BCA4248897F1606 /* Prelude/UI/Root/MainTabView.swift */; };
+		4EDB65BAED5F4657923253FB /* Prelude/Agent/FoundationModelsIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96FABB928034F8099559D4D /* Prelude/Agent/FoundationModelsIntegration.swift */; };
+		53823F540E68499EB07BD6BE /* Prelude/Voice/TTS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837244B9D2384289A09E9A68 /* Prelude/Voice/TTS.swift */; };
+		5D582590C8204985973D37CA /* Prelude/Tools/TagEmotionTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2E82C564984920B35EE47D /* Prelude/Tools/TagEmotionTool.swift */; };
+		6734EBAE4CB24EEB82EA93FB /* Prelude/UI/Brief/BriefDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B0398ED7EF41EB83BF9309 /* Prelude/UI/Brief/BriefDetailView.swift */; };
+		6EF2B660E7F940548AB15221 /* Prelude/UI/History/SessionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4729CF0CF33841B19F157C90 /* Prelude/UI/History/SessionRowView.swift */; };
+		71DD34C436E840A5A0CA93F7 /* PreludeTests/ConversationPhasePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB5949FA37D4605AD247D3B /* PreludeTests/ConversationPhasePolicyTests.swift */; };
+		748DFEA0F3B34342A5800AA6 /* Prelude/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 232E9F87849344849A1BFC03 /* Prelude/Assets.xcassets */; };
+		7546CED081A4405C843E0096 /* Prelude/Models/EmotionLabel+ResolvedForSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78875BE92F24A2693355309 /* Prelude/Models/EmotionLabel+ResolvedForSession.swift */; };
+		7BBE2A2E229B4BF7BBE71B26 /* Prelude/Tools/EndSessionTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502E9992E41544C3AF4449F2 /* Prelude/Tools/EndSessionTool.swift */; };
+		859E15E0381A499F8DD38531 /* Prelude/Agent/ConversationPhasePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B4DEC2CB4C44D8BAD777B9E /* Prelude/Agent/ConversationPhasePolicy.swift */; };
+		85D59729C7F34673AE97B675 /* Prelude/Models/VoiceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95EF7386AFB64A91B320462B /* Prelude/Models/VoiceState.swift */; };
+		88305675D3E04C53B072D2A7 /* Prelude/UI/Root/RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F1C377E8384F1B9F3A99B6 /* Prelude/UI/Root/RootView.swift */; };
+		8EA5D9F148B242E8B54F6AC3 /* PreludeTests/PreludeTTSPrefetchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACA9982AFBE4F36A360A634 /* PreludeTests/PreludeTTSPrefetchTests.swift */; };
+		9800157B4A9A4729B9DAC9D1 /* Prelude/Memory/BriefDraftSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926E39852AD34671B3B4CE8B /* Prelude/Memory/BriefDraftSanitizer.swift */; };
+		981D19201A22404885056DD8 /* Prelude/Memory/PatternDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 188903ADDF4D4B398BDA2255 /* Prelude/Memory/PatternDetector.swift */; };
+		9A64579FD4AA449A912EEFAD /* Prelude/App/PreludeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A848592A50CF4486A9DA3AC9 /* Prelude/App/PreludeApp.swift */; };
+		9B2A2FC1B0C5482C91E9B06B /* Prelude/Memory/BriefPatientWordsNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE904738F29F40F7A94B1801 /* Prelude/Memory/BriefPatientWordsNormalizer.swift */; };
+		A024CFE86F76485F9CEEBB23 /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17881A1B27124E86A8EDD829 /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift */; };
+		A2B31B1952944CCAA008F725 /* Prelude/UI/Onboarding/OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70BB82887BBF4D10A7DB10EB /* Prelude/UI/Onboarding/OnboardingView.swift */; };
+		A5234774A0D04CA38A50612C /* Prelude/Design/PreludeTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD841D1FC4694D8DB60FAD76 /* Prelude/Design/PreludeTypography.swift */; };
+		A5D7CBD4585E482F9A0168CC /* Prelude/Models/EmotionLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF0ED481E560475C96582A3F /* Prelude/Models/EmotionLabel.swift */; };
+		A6DA170BF73647669A564640 /* Prelude/Tools/SaveInsightTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE008C312F9C4DCFA24C4916 /* Prelude/Tools/SaveInsightTool.swift */; };
+		ADE860A72129451980314E7C /* Prelude/Design/PreludeColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78624E68B089473BB2FF7476 /* Prelude/Design/PreludeColors.swift */; };
+		AF0929C8A89A4E3A87459600 /* Prelude/Tools/GetPastInsightsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91AA8E32B68E49A98DB48F4D /* Prelude/Tools/GetPastInsightsTool.swift */; };
+		B38312E3E36647B38FC61964 /* Prelude/Agent/AgentDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52C13F35D46496497EA3224 /* Prelude/Agent/AgentDecision.swift */; };
+		B3BEB7BF63794F168A16E89F /* Prelude/App/AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCC54C9AA1564785989B8937 /* Prelude/App/AppState.swift */; };
+		C1C4B82CB2C44F57806E90F0 /* Prelude/UI/Home/PremiumVoiceWaitSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAEE3A4BA65D4A28AE39ABA3 /* Prelude/UI/Home/PremiumVoiceWaitSheet.swift */; };
+		C3D4AE77507343378FB49683 /* Prelude/Tools/GenerateCardTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D19BF94BB445B2BCD4C6DB /* Prelude/Tools/GenerateCardTool.swift */; };
+		CE1BBB36B643481B8D5B2FC6 /* Prelude/Tools/ToolRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA82929D6AA64A37A14E7F9F /* Prelude/Tools/ToolRegistry.swift */; };
+		CF78E6149A4548CBB696CD85 /* Prelude/Memory/MemoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AC22944C6E4385A065686F /* Prelude/Memory/MemoryStore.swift */; };
+		D06259BBD1264FECA46B9974 /* Prelude/Memory/PreludeBriefFoundationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1A2BEC08F045729C58E5F5 /* Prelude/Memory/PreludeBriefFoundationModels.swift */; };
+		D20A47A4F77D42E7BD783A89 /* Prelude/Models/CardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EF6C12D6F042D0A8776243 /* Prelude/Models/CardType.swift */; };
+		D44CFEE6534845248D200641 /* Prelude/Memory/SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C8BD23054945E984A4E7AC /* Prelude/Memory/SessionStore.swift */; };
+		D52A8BFB59834EE2A7D4268A /* Prelude/Design/PreludeMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FDB4AE090D4579AB32C4A0 /* Prelude/Design/PreludeMotion.swift */; };
+		D6A5C57444F645F793BA2F5A /* Prelude/Models/ConversationPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4668A5F89E044099C7C18FC /* Prelude/Models/ConversationPhase.swift */; };
+		D717540DD9B04102B28B3A75 /* Prelude/Agent/PreludeBriefAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71BD3D07B1594ABA97BBF72E /* Prelude/Agent/PreludeBriefAgent.swift */; };
+		D97519AAE2F7422797CD89B9 /* Prelude/Design/PreludeGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E85F7DC0FF4117A07A5203 /* Prelude/Design/PreludeGlass.swift */; };
+		D9A4EB0FC32046659D221185 /* Prelude/Voice/SpeechRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2F30C4B48F4D2AA2593154 /* Prelude/Voice/SpeechRecognizerService.swift */; };
+		DA26269A0935421A8DFBD135 /* Prelude/UI/Home/AmbientBlobsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7693F950E3304BCF9F8946B0 /* Prelude/UI/Home/AmbientBlobsView.swift */; };
+		DD92D476A16549BF9A2358EE /* Prelude/Tools/ToolExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67750F82B243451AA2D82E5C /* Prelude/Tools/ToolExecutionContext.swift */; };
+		E3BDA0E768ED4B1F83B15055 /* Prelude/UI/Settings/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C9C74CAD89400BBDDFD739 /* Prelude/UI/Settings/SettingsView.swift */; };
+		EF8C8A6599774BBC8E964901 /* Prelude/Tools/CheckPatternsTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96F23AE6461F465AA05FACE1 /* Prelude/Tools/CheckPatternsTool.swift */; };
+		F12B71C52AEE487BBC82EB09 /* Prelude/Models/SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BBAEF5E9824234B8F86716 /* Prelude/Models/SwiftDataModels.swift */; };
+		F430BFD3EF344CF69A596ABC /* Prelude/Tools/SummarizeSessionTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 776DE5AE235C42FDB514A24E /* Prelude/Tools/SummarizeSessionTool.swift */; };
+		FAF0958960464C7291439026 /* Prelude/Memory/BriefGenerationDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16631588EEC24E34A509850D /* Prelude/Memory/BriefGenerationDraft.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BC5ADBB1EE55445383E2D342 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 582241C8096A48F992A4F34C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F4962B1B970C4EEC88F060E3;
+			remoteInfo = Prelude;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01B0398ED7EF41EB83BF9309 /* Prelude/UI/Brief/BriefDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Brief/BriefDetailView.swift; sourceTree = "<group>"; };
+		07840A964E3441EDB67F478D /* PreludeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PreludeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		09AC22944C6E4385A065686F /* Prelude/Memory/MemoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/MemoryStore.swift; sourceTree = "<group>"; };
+		16631588EEC24E34A509850D /* Prelude/Memory/BriefGenerationDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/BriefGenerationDraft.swift; sourceTree = "<group>"; };
+		17881A1B27124E86A8EDD829 /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Voice/SpeechAnalyzerPlaceholder.swift; sourceTree = "<group>"; };
+		17BEDDAF315743D0B3DDEDD2 /* Prelude/UI/Weekly/WeeklyBriefView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Weekly/WeeklyBriefView.swift; sourceTree = "<group>"; };
+		188903ADDF4D4B398BDA2255 /* Prelude/Memory/PatternDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/PatternDetector.swift; sourceTree = "<group>"; };
+		2323834225304C8BA9D326DD /* Prelude/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Prelude/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		232E9F87849344849A1BFC03 /* Prelude/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Prelude/Assets.xcassets; sourceTree = "<group>"; };
+		23EF6C12D6F042D0A8776243 /* Prelude/Models/CardType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Models/CardType.swift; sourceTree = "<group>"; };
+		245F14806B27451FBF87E840 /* Prelude/UI/Home/HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Home/HomeView.swift; sourceTree = "<group>"; };
+		27BD5A231BCA4248897F1606 /* Prelude/UI/Root/MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Root/MainTabView.swift; sourceTree = "<group>"; };
+		31C8BD23054945E984A4E7AC /* Prelude/Memory/SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/SessionStore.swift; sourceTree = "<group>"; };
+		323FB0C6D3A54B7F9751BC70 /* Prelude/UI/Session/SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Session/SessionView.swift; sourceTree = "<group>"; };
+		32BBAEF5E9824234B8F86716 /* Prelude/Models/SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Models/SwiftDataModels.swift; sourceTree = "<group>"; };
+		3D2E82C564984920B35EE47D /* Prelude/Tools/TagEmotionTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/TagEmotionTool.swift; sourceTree = "<group>"; };
+		4729CF0CF33841B19F157C90 /* Prelude/UI/History/SessionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/History/SessionRowView.swift; sourceTree = "<group>"; };
+		48C9C74CAD89400BBDDFD739 /* Prelude/UI/Settings/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Settings/SettingsView.swift; sourceTree = "<group>"; };
+		4CC121BB9CCB4730A5DD6A70 /* Prelude/Agent/PreludeAgentPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/PreludeAgentPrompts.swift; sourceTree = "<group>"; };
+		4FAA9CC37B96450A9B97DDEB /* Prelude/App/CrisisDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/App/CrisisDetection.swift; sourceTree = "<group>"; };
+		502E9992E41544C3AF4449F2 /* Prelude/Tools/EndSessionTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/EndSessionTool.swift; sourceTree = "<group>"; };
+		50E85F7DC0FF4117A07A5203 /* Prelude/Design/PreludeGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Design/PreludeGlass.swift; sourceTree = "<group>"; };
+		57B1ECEAE2094899AFEF4148 /* Prelude/Memory/BriefStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/BriefStore.swift; sourceTree = "<group>"; };
+		5ACA9982AFBE4F36A360A634 /* PreludeTests/PreludeTTSPrefetchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreludeTests/PreludeTTSPrefetchTests.swift; sourceTree = "<group>"; };
+		5F2F30C4B48F4D2AA2593154 /* Prelude/Voice/SpeechRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Voice/SpeechRecognizerService.swift; sourceTree = "<group>"; };
+		67750F82B243451AA2D82E5C /* Prelude/Tools/ToolExecutionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/ToolExecutionContext.swift; sourceTree = "<group>"; };
+		6DB2BBCE5A8348A19C97B8D4 /* Prelude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prelude.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		70BB82887BBF4D10A7DB10EB /* Prelude/UI/Onboarding/OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Onboarding/OnboardingView.swift; sourceTree = "<group>"; };
+		71BD3D07B1594ABA97BBF72E /* Prelude/Agent/PreludeBriefAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/PreludeBriefAgent.swift; sourceTree = "<group>"; };
+		75F1C377E8384F1B9F3A99B6 /* Prelude/UI/Root/RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Root/RootView.swift; sourceTree = "<group>"; };
+		7693F950E3304BCF9F8946B0 /* Prelude/UI/Home/AmbientBlobsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Home/AmbientBlobsView.swift; sourceTree = "<group>"; };
+		776DE5AE235C42FDB514A24E /* Prelude/Tools/SummarizeSessionTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/SummarizeSessionTool.swift; sourceTree = "<group>"; };
+		78624E68B089473BB2FF7476 /* Prelude/Design/PreludeColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Design/PreludeColors.swift; sourceTree = "<group>"; };
+		806CFBEE44374A5781901E34 /* Prelude/Voice/VoiceEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Voice/VoiceEngine.swift; sourceTree = "<group>"; };
+		837244B9D2384289A09E9A68 /* Prelude/Voice/TTS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Voice/TTS.swift; sourceTree = "<group>"; };
+		85F72CF97F59483EA7A24636 /* Prelude/UI/Weekly/EmotionalArcChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Weekly/EmotionalArcChartView.swift; sourceTree = "<group>"; };
+		8B4DEC2CB4C44D8BAD777B9E /* Prelude/Agent/ConversationPhasePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/ConversationPhasePolicy.swift; sourceTree = "<group>"; };
+		91AA8E32B68E49A98DB48F4D /* Prelude/Tools/GetPastInsightsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/GetPastInsightsTool.swift; sourceTree = "<group>"; };
+		926E39852AD34671B3B4CE8B /* Prelude/Memory/BriefDraftSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/BriefDraftSanitizer.swift; sourceTree = "<group>"; };
+		95EF7386AFB64A91B320462B /* Prelude/Models/VoiceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Models/VoiceState.swift; sourceTree = "<group>"; };
+		96F23AE6461F465AA05FACE1 /* Prelude/Tools/CheckPatternsTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/CheckPatternsTool.swift; sourceTree = "<group>"; };
+		9EB5949FA37D4605AD247D3B /* PreludeTests/ConversationPhasePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreludeTests/ConversationPhasePolicyTests.swift; sourceTree = "<group>"; };
+		9F0C68DA8C0C4CF6ACEA65A4 /* Prelude/App/ModelAvailabilityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/App/ModelAvailabilityState.swift; sourceTree = "<group>"; };
+		A2B96F6E384A46F382D8B6BC /* Prelude/UI/History/HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/History/HistoryView.swift; sourceTree = "<group>"; };
+		A848592A50CF4486A9DA3AC9 /* Prelude/App/PreludeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/App/PreludeApp.swift; sourceTree = "<group>"; };
+		AA2689941AC041F8867118DC /* Prelude/Agent/AgentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/AgentController.swift; sourceTree = "<group>"; };
+		AA7E190A6A864D63973C5D9F /* Prelude/UI/Brief/BriefCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Brief/BriefCardView.swift; sourceTree = "<group>"; };
+		BA82929D6AA64A37A14E7F9F /* Prelude/Tools/ToolRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/ToolRegistry.swift; sourceTree = "<group>"; };
+		BAEE3A4BA65D4A28AE39ABA3 /* Prelude/UI/Home/PremiumVoiceWaitSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Home/PremiumVoiceWaitSheet.swift; sourceTree = "<group>"; };
+		BC58CA40979E43CFAA0E8763 /* Prelude/App/PreludeHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/App/PreludeHaptics.swift; sourceTree = "<group>"; };
+		BD7F9B43804542C3A0238008 /* Prelude/Memory/InsightStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/InsightStore.swift; sourceTree = "<group>"; };
+		CD841D1FC4694D8DB60FAD76 /* Prelude/Design/PreludeTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Design/PreludeTypography.swift; sourceTree = "<group>"; };
+		CE1A2BEC08F045729C58E5F5 /* Prelude/Memory/PreludeBriefFoundationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/PreludeBriefFoundationModels.swift; sourceTree = "<group>"; };
+		D4D19BF94BB445B2BCD4C6DB /* Prelude/Tools/GenerateCardTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/GenerateCardTool.swift; sourceTree = "<group>"; };
+		DF0ED481E560475C96582A3F /* Prelude/Models/EmotionLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Models/EmotionLabel.swift; sourceTree = "<group>"; };
+		E52C13F35D46496497EA3224 /* Prelude/Agent/AgentDecision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/AgentDecision.swift; sourceTree = "<group>"; };
+		EA0555149EAF4F9B930739B0 /* Prelude/UI/Session/PresenceShapeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/UI/Session/PresenceShapeView.swift; sourceTree = "<group>"; };
+		ECB35FDE669F422295F04B57 /* Prelude/App/UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/App/UserSettings.swift; sourceTree = "<group>"; };
+		EE008C312F9C4DCFA24C4916 /* Prelude/Tools/SaveInsightTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Tools/SaveInsightTool.swift; sourceTree = "<group>"; };
+		EE904738F29F40F7A94B1801 /* Prelude/Memory/BriefPatientWordsNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Memory/BriefPatientWordsNormalizer.swift; sourceTree = "<group>"; };
+		F4668A5F89E044099C7C18FC /* Prelude/Models/ConversationPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Models/ConversationPhase.swift; sourceTree = "<group>"; };
+		F4FDB4AE090D4579AB32C4A0 /* Prelude/Design/PreludeMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Design/PreludeMotion.swift; sourceTree = "<group>"; };
+		F78875BE92F24A2693355309 /* Prelude/Models/EmotionLabel+ResolvedForSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Prelude/Models/EmotionLabel+ResolvedForSession.swift"; sourceTree = "<group>"; };
+		F96FABB928034F8099559D4D /* Prelude/Agent/FoundationModelsIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/Agent/FoundationModelsIntegration.swift; sourceTree = "<group>"; };
+		FCC54C9AA1564785989B8937 /* Prelude/App/AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prelude/App/AppState.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		2AD28378A7694BF08945F93F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6DB2BBCE5A8348A19C97B8D4 /* Prelude.app */,
+				07840A964E3441EDB67F478D /* PreludeTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3B34E6A945574AB5BF09519D = {
+			isa = PBXGroup;
+			children = (
+				585BA7316BEE4582A4006F16 /* Prelude */,
+				9E3DE35DA8D54CAE886239E6 /* PreludeTests */,
+				2AD28378A7694BF08945F93F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		585BA7316BEE4582A4006F16 /* Prelude */ = {
+			isa = PBXGroup;
+			children = (
+				AA2689941AC041F8867118DC /* Prelude/Agent/AgentController.swift */,
+				E52C13F35D46496497EA3224 /* Prelude/Agent/AgentDecision.swift */,
+				8B4DEC2CB4C44D8BAD777B9E /* Prelude/Agent/ConversationPhasePolicy.swift */,
+				F96FABB928034F8099559D4D /* Prelude/Agent/FoundationModelsIntegration.swift */,
+				4CC121BB9CCB4730A5DD6A70 /* Prelude/Agent/PreludeAgentPrompts.swift */,
+				71BD3D07B1594ABA97BBF72E /* Prelude/Agent/PreludeBriefAgent.swift */,
+				FCC54C9AA1564785989B8937 /* Prelude/App/AppState.swift */,
+				4FAA9CC37B96450A9B97DDEB /* Prelude/App/CrisisDetection.swift */,
+				9F0C68DA8C0C4CF6ACEA65A4 /* Prelude/App/ModelAvailabilityState.swift */,
+				A848592A50CF4486A9DA3AC9 /* Prelude/App/PreludeApp.swift */,
+				BC58CA40979E43CFAA0E8763 /* Prelude/App/PreludeHaptics.swift */,
+				ECB35FDE669F422295F04B57 /* Prelude/App/UserSettings.swift */,
+				78624E68B089473BB2FF7476 /* Prelude/Design/PreludeColors.swift */,
+				50E85F7DC0FF4117A07A5203 /* Prelude/Design/PreludeGlass.swift */,
+				F4FDB4AE090D4579AB32C4A0 /* Prelude/Design/PreludeMotion.swift */,
+				CD841D1FC4694D8DB60FAD76 /* Prelude/Design/PreludeTypography.swift */,
+				926E39852AD34671B3B4CE8B /* Prelude/Memory/BriefDraftSanitizer.swift */,
+				16631588EEC24E34A509850D /* Prelude/Memory/BriefGenerationDraft.swift */,
+				EE904738F29F40F7A94B1801 /* Prelude/Memory/BriefPatientWordsNormalizer.swift */,
+				57B1ECEAE2094899AFEF4148 /* Prelude/Memory/BriefStore.swift */,
+				BD7F9B43804542C3A0238008 /* Prelude/Memory/InsightStore.swift */,
+				09AC22944C6E4385A065686F /* Prelude/Memory/MemoryStore.swift */,
+				188903ADDF4D4B398BDA2255 /* Prelude/Memory/PatternDetector.swift */,
+				CE1A2BEC08F045729C58E5F5 /* Prelude/Memory/PreludeBriefFoundationModels.swift */,
+				31C8BD23054945E984A4E7AC /* Prelude/Memory/SessionStore.swift */,
+				23EF6C12D6F042D0A8776243 /* Prelude/Models/CardType.swift */,
+				F4668A5F89E044099C7C18FC /* Prelude/Models/ConversationPhase.swift */,
+				F78875BE92F24A2693355309 /* Prelude/Models/EmotionLabel+ResolvedForSession.swift */,
+				DF0ED481E560475C96582A3F /* Prelude/Models/EmotionLabel.swift */,
+				32BBAEF5E9824234B8F86716 /* Prelude/Models/SwiftDataModels.swift */,
+				95EF7386AFB64A91B320462B /* Prelude/Models/VoiceState.swift */,
+				96F23AE6461F465AA05FACE1 /* Prelude/Tools/CheckPatternsTool.swift */,
+				502E9992E41544C3AF4449F2 /* Prelude/Tools/EndSessionTool.swift */,
+				D4D19BF94BB445B2BCD4C6DB /* Prelude/Tools/GenerateCardTool.swift */,
+				91AA8E32B68E49A98DB48F4D /* Prelude/Tools/GetPastInsightsTool.swift */,
+				EE008C312F9C4DCFA24C4916 /* Prelude/Tools/SaveInsightTool.swift */,
+				776DE5AE235C42FDB514A24E /* Prelude/Tools/SummarizeSessionTool.swift */,
+				3D2E82C564984920B35EE47D /* Prelude/Tools/TagEmotionTool.swift */,
+				67750F82B243451AA2D82E5C /* Prelude/Tools/ToolExecutionContext.swift */,
+				BA82929D6AA64A37A14E7F9F /* Prelude/Tools/ToolRegistry.swift */,
+				AA7E190A6A864D63973C5D9F /* Prelude/UI/Brief/BriefCardView.swift */,
+				01B0398ED7EF41EB83BF9309 /* Prelude/UI/Brief/BriefDetailView.swift */,
+				A2B96F6E384A46F382D8B6BC /* Prelude/UI/History/HistoryView.swift */,
+				4729CF0CF33841B19F157C90 /* Prelude/UI/History/SessionRowView.swift */,
+				7693F950E3304BCF9F8946B0 /* Prelude/UI/Home/AmbientBlobsView.swift */,
+				245F14806B27451FBF87E840 /* Prelude/UI/Home/HomeView.swift */,
+				BAEE3A4BA65D4A28AE39ABA3 /* Prelude/UI/Home/PremiumVoiceWaitSheet.swift */,
+				70BB82887BBF4D10A7DB10EB /* Prelude/UI/Onboarding/OnboardingView.swift */,
+				27BD5A231BCA4248897F1606 /* Prelude/UI/Root/MainTabView.swift */,
+				75F1C377E8384F1B9F3A99B6 /* Prelude/UI/Root/RootView.swift */,
+				EA0555149EAF4F9B930739B0 /* Prelude/UI/Session/PresenceShapeView.swift */,
+				323FB0C6D3A54B7F9751BC70 /* Prelude/UI/Session/SessionView.swift */,
+				48C9C74CAD89400BBDDFD739 /* Prelude/UI/Settings/SettingsView.swift */,
+				85F72CF97F59483EA7A24636 /* Prelude/UI/Weekly/EmotionalArcChartView.swift */,
+				17BEDDAF315743D0B3DDEDD2 /* Prelude/UI/Weekly/WeeklyBriefView.swift */,
+				17881A1B27124E86A8EDD829 /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift */,
+				5F2F30C4B48F4D2AA2593154 /* Prelude/Voice/SpeechRecognizerService.swift */,
+				837244B9D2384289A09E9A68 /* Prelude/Voice/TTS.swift */,
+				806CFBEE44374A5781901E34 /* Prelude/Voice/VoiceEngine.swift */,
+				232E9F87849344849A1BFC03 /* Prelude/Assets.xcassets */,
+				2323834225304C8BA9D326DD /* Prelude/PrivacyInfo.xcprivacy */,
+			);
+			name = Prelude;
+			sourceTree = "<group>";
+		};
+		9E3DE35DA8D54CAE886239E6 /* PreludeTests */ = {
+			isa = PBXGroup;
+			children = (
+				9EB5949FA37D4605AD247D3B /* PreludeTests/ConversationPhasePolicyTests.swift */,
+				5ACA9982AFBE4F36A360A634 /* PreludeTests/PreludeTTSPrefetchTests.swift */,
+			);
+			name = PreludeTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F4962B1B970C4EEC88F060E3 /* Prelude */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 21664D0BCA49499891B8440F /* Build configuration list for PBXNativeTarget "Prelude" */;
+			buildPhases = (
+				43712C3E99454932B865CFF6 /* Sources */,
+				1E799A3CA6FD4F4F8CD526D9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Prelude;
+			productName = Prelude;
+			productReference = 6DB2BBCE5A8348A19C97B8D4 /* Prelude.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FE08995B5CF24993AB9CCC64 /* PreludeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05542A0DEB1E457E82636744 /* Build configuration list for PBXNativeTarget "PreludeTests" */;
+			buildPhases = (
+				8A588DAA8E3046AF81CD99EF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4895928FF8B54E43BACDDD62 /* PBXTargetDependency */,
+			);
+			name = PreludeTests;
+			productName = PreludeTests;
+			productReference = 07840A964E3441EDB67F478D /* PreludeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		582241C8096A48F992A4F34C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 5E69662E054941A2BF7135C4 /* Build configuration list for PBXProject "Prelude therapy prep" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3B34E6A945574AB5BF09519D;
+			productRefGroup = 2AD28378A7694BF08945F93F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F4962B1B970C4EEC88F060E3 /* Prelude */,
+				FE08995B5CF24993AB9CCC64 /* PreludeTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1E799A3CA6FD4F4F8CD526D9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				748DFEA0F3B34342A5800AA6 /* Prelude/Assets.xcassets in Resources */,
+				3507491A310C4EF99779904B /* Prelude/PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		43712C3E99454932B865CFF6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3AD108A0A0A24505912FE76D /* Prelude/Agent/AgentController.swift in Sources */,
+				B38312E3E36647B38FC61964 /* Prelude/Agent/AgentDecision.swift in Sources */,
+				859E15E0381A499F8DD38531 /* Prelude/Agent/ConversationPhasePolicy.swift in Sources */,
+				4EDB65BAED5F4657923253FB /* Prelude/Agent/FoundationModelsIntegration.swift in Sources */,
+				1300913F70CA4D1DA024DF93 /* Prelude/Agent/PreludeAgentPrompts.swift in Sources */,
+				D717540DD9B04102B28B3A75 /* Prelude/Agent/PreludeBriefAgent.swift in Sources */,
+				B3BEB7BF63794F168A16E89F /* Prelude/App/AppState.swift in Sources */,
+				36BCDB8EF97B4FE4BF89F10E /* Prelude/App/CrisisDetection.swift in Sources */,
+				12E56D70C2D945D88E649AF2 /* Prelude/App/ModelAvailabilityState.swift in Sources */,
+				9A64579FD4AA449A912EEFAD /* Prelude/App/PreludeApp.swift in Sources */,
+				04D4E3777F6A4B7FB28730F8 /* Prelude/App/PreludeHaptics.swift in Sources */,
+				36DBC2A164E34C38B86802A2 /* Prelude/App/UserSettings.swift in Sources */,
+				ADE860A72129451980314E7C /* Prelude/Design/PreludeColors.swift in Sources */,
+				D97519AAE2F7422797CD89B9 /* Prelude/Design/PreludeGlass.swift in Sources */,
+				D52A8BFB59834EE2A7D4268A /* Prelude/Design/PreludeMotion.swift in Sources */,
+				A5234774A0D04CA38A50612C /* Prelude/Design/PreludeTypography.swift in Sources */,
+				9800157B4A9A4729B9DAC9D1 /* Prelude/Memory/BriefDraftSanitizer.swift in Sources */,
+				FAF0958960464C7291439026 /* Prelude/Memory/BriefGenerationDraft.swift in Sources */,
+				9B2A2FC1B0C5482C91E9B06B /* Prelude/Memory/BriefPatientWordsNormalizer.swift in Sources */,
+				4476DFC5910049AB96AA5670 /* Prelude/Memory/BriefStore.swift in Sources */,
+				0B265F72DD6749078A64C5E3 /* Prelude/Memory/InsightStore.swift in Sources */,
+				CF78E6149A4548CBB696CD85 /* Prelude/Memory/MemoryStore.swift in Sources */,
+				981D19201A22404885056DD8 /* Prelude/Memory/PatternDetector.swift in Sources */,
+				D06259BBD1264FECA46B9974 /* Prelude/Memory/PreludeBriefFoundationModels.swift in Sources */,
+				D44CFEE6534845248D200641 /* Prelude/Memory/SessionStore.swift in Sources */,
+				D20A47A4F77D42E7BD783A89 /* Prelude/Models/CardType.swift in Sources */,
+				D6A5C57444F645F793BA2F5A /* Prelude/Models/ConversationPhase.swift in Sources */,
+				7546CED081A4405C843E0096 /* Prelude/Models/EmotionLabel+ResolvedForSession.swift in Sources */,
+				A5D7CBD4585E482F9A0168CC /* Prelude/Models/EmotionLabel.swift in Sources */,
+				F12B71C52AEE487BBC82EB09 /* Prelude/Models/SwiftDataModels.swift in Sources */,
+				85D59729C7F34673AE97B675 /* Prelude/Models/VoiceState.swift in Sources */,
+				EF8C8A6599774BBC8E964901 /* Prelude/Tools/CheckPatternsTool.swift in Sources */,
+				7BBE2A2E229B4BF7BBE71B26 /* Prelude/Tools/EndSessionTool.swift in Sources */,
+				C3D4AE77507343378FB49683 /* Prelude/Tools/GenerateCardTool.swift in Sources */,
+				AF0929C8A89A4E3A87459600 /* Prelude/Tools/GetPastInsightsTool.swift in Sources */,
+				A6DA170BF73647669A564640 /* Prelude/Tools/SaveInsightTool.swift in Sources */,
+				F430BFD3EF344CF69A596ABC /* Prelude/Tools/SummarizeSessionTool.swift in Sources */,
+				5D582590C8204985973D37CA /* Prelude/Tools/TagEmotionTool.swift in Sources */,
+				DD92D476A16549BF9A2358EE /* Prelude/Tools/ToolExecutionContext.swift in Sources */,
+				CE1BBB36B643481B8D5B2FC6 /* Prelude/Tools/ToolRegistry.swift in Sources */,
+				202A7A2E100640E4868321C5 /* Prelude/UI/Brief/BriefCardView.swift in Sources */,
+				6734EBAE4CB24EEB82EA93FB /* Prelude/UI/Brief/BriefDetailView.swift in Sources */,
+				03E9825EF1FF48D3BDA74742 /* Prelude/UI/History/HistoryView.swift in Sources */,
+				6EF2B660E7F940548AB15221 /* Prelude/UI/History/SessionRowView.swift in Sources */,
+				DA26269A0935421A8DFBD135 /* Prelude/UI/Home/AmbientBlobsView.swift in Sources */,
+				2B90AF1D958D4DBA8AE46F9A /* Prelude/UI/Home/HomeView.swift in Sources */,
+				C1C4B82CB2C44F57806E90F0 /* Prelude/UI/Home/PremiumVoiceWaitSheet.swift in Sources */,
+				A2B31B1952944CCAA008F725 /* Prelude/UI/Onboarding/OnboardingView.swift in Sources */,
+				471744D0907B457AB9D9E71D /* Prelude/UI/Root/MainTabView.swift in Sources */,
+				88305675D3E04C53B072D2A7 /* Prelude/UI/Root/RootView.swift in Sources */,
+				392AF41F98B845E6937C0F7B /* Prelude/UI/Session/PresenceShapeView.swift in Sources */,
+				2D812A86C2734DA5A4F9D054 /* Prelude/UI/Session/SessionView.swift in Sources */,
+				E3BDA0E768ED4B1F83B15055 /* Prelude/UI/Settings/SettingsView.swift in Sources */,
+				0B30437B0D7C4BDB9D688989 /* Prelude/UI/Weekly/EmotionalArcChartView.swift in Sources */,
+				260F6DDECF004FC29B5FAC5B /* Prelude/UI/Weekly/WeeklyBriefView.swift in Sources */,
+				A024CFE86F76485F9CEEBB23 /* Prelude/Voice/SpeechAnalyzerPlaceholder.swift in Sources */,
+				D9A4EB0FC32046659D221185 /* Prelude/Voice/SpeechRecognizerService.swift in Sources */,
+				53823F540E68499EB07BD6BE /* Prelude/Voice/TTS.swift in Sources */,
+				18AA05CCA3A6405F9CAF2D43 /* Prelude/Voice/VoiceEngine.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A588DAA8E3046AF81CD99EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71DD34C436E840A5A0CA93F7 /* PreludeTests/ConversationPhasePolicyTests.swift in Sources */,
+				8EA5D9F148B242E8B54F6AC3 /* PreludeTests/PreludeTTSPrefetchTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4895928FF8B54E43BACDDD62 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F4962B1B970C4EEC88F060E3 /* Prelude */;
+			targetProxy = BC5ADBB1EE55445383E2D342 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		44CBC311D6924A1595FA1B81 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5D5FA0FBDAE34131AB6F39A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 439GU2NXZH;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.prelude.PreludeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Prelude.app/Prelude";
+			};
+			name = Release;
+		};
+		9774D2354BB7495C82DCC805 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9FDF681AC43A4F5A875E4E0A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 439GU2NXZH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Prelude: therapy prep";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Prelude uses the microphone for your reflection session.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Prelude transcribes your speech on device during sessions.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.echovault.prelude;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		C5417D1F60774FCAB40F265F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 439GU2NXZH;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.prelude.PreludeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Prelude.app/Prelude";
+			};
+			name = Debug;
+		};
+		E6D799545BBA4A2B8BB92304 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 439GU2NXZH;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Prelude: therapy prep";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Prelude uses the microphone for your reflection session.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Prelude transcribes your speech on device during sessions.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.echovault.prelude;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05542A0DEB1E457E82636744 /* Build configuration list for PBXNativeTarget "PreludeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5417D1F60774FCAB40F265F /* Debug */,
+				5D5FA0FBDAE34131AB6F39A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		21664D0BCA49499891B8440F /* Build configuration list for PBXNativeTarget "Prelude" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E6D799545BBA4A2B8BB92304 /* Debug */,
+				9FDF681AC43A4F5A875E4E0A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5E69662E054941A2BF7135C4 /* Build configuration list for PBXProject "Prelude therapy prep" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9774D2354BB7495C82DCC805 /* Debug */,
+				44CBC311D6924A1595FA1B81 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 582241C8096A48F992A4F34C /* Project object */;
+}

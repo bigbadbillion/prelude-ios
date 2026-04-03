@@ -1,0 +1,324 @@
+/* Prelude legal pages — tokens aligned with Prelude/Prelude/Design/PreludeColors.swift */
+
+:root {
+  color-scheme: light dark;
+  --depth: #faf7f2;
+  --surface: #f0ebe3;
+  --raised: #e8e1d6;
+  --primary: #1a1612;
+  --secondary: #6b6057;
+  --tertiary: #9e9488;
+  --border: rgba(0, 0, 0, 0.08);
+  --accent: #c8873a;
+  --accent-muted: #7a9e7e;
+  --font-display: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+  --font-body: system-ui, -apple-system, "SF Pro Text", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --max-width: 42rem;
+  --space: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --depth: #0f0d0a;
+    --surface: #1c1813;
+    --raised: #252018;
+    --primary: #f5f0e8;
+    --secondary: #9e9488;
+    --tertiary: #5c5348;
+    --border: rgba(255, 255, 255, 0.07);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--primary);
+  background: var(--depth);
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--accent-muted);
+}
+
+.site-header {
+  padding: var(--space) 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.site-header__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.site-header__brand {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.site-header__brand:hover {
+  color: var(--accent);
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.site-nav a {
+  color: var(--secondary);
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: var(--accent);
+}
+
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  font-size: 1.0625rem;
+  color: var(--secondary);
+  margin: 0 0 2rem;
+  line-height: 1.55;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 2.25rem 0 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+  color: var(--primary);
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+ul {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+li::marker {
+  color: var(--tertiary);
+}
+
+.summary-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  margin: 0 0 2rem;
+}
+
+.summary-box ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.summary-box li {
+  margin-bottom: 0.75rem;
+}
+
+.summary-box li:last-child {
+  margin-bottom: 0;
+}
+
+.neg-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.neg-list li {
+  position: relative;
+  padding-left: 1.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.neg-list li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tertiary);
+  margin-bottom: 1.5rem;
+}
+
+.contact-card {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.contact-card strong {
+  display: block;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tertiary);
+  margin-bottom: 0.35rem;
+}
+
+.contact-card a {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.faq details {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  margin-bottom: 0.65rem;
+  padding: 0.85rem 1rem;
+}
+
+.faq summary {
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq details[open] summary {
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+
+.faq details p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--secondary);
+}
+
+.site-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+  color: var(--tertiary);
+}
+
+.site-footer a {
+  color: var(--secondary);
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+}
+
+.support-hero {
+  margin-bottom: 2rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.landing-docs {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.landing-docs li {
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.landing-docs a {
+  display: block;
+  font-weight: 600;
+  font-size: 1.02rem;
+  margin-bottom: 0.35rem;
+  text-decoration: none;
+}
+
+.landing-docs a:hover {
+  text-decoration: underline;
+}
+
+.landing-docs__hint {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--secondary);
+  font-weight: 400;
+}
